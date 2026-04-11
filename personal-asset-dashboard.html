@@ -356,20 +356,43 @@ const DEFAULT_HOLDINGS = [
 ];
 
 // ── Load Data ────────────────────────────────────────────
+// 读取静态资产（内置 + 自定义）
 function loadStatic() {
+  const raw = localStorage.getItem('staticAssets_v3');
+  let allAssets = [];
+  try { if (raw) allAssets = JSON.parse(raw); } catch(e) {}
+
+  // 内置资产
+  const result = {};
+  PLATFORM_ASSETS.forEach(p => {
+    const saved = allAssets.find(x => x.id === p.id);
+    result[p.id] = { amount: saved ? (saved.amount ?? DEFAULT_STATIC[p.id]?.amount ?? 0) : DEFAULT_STATIC[p.id]?.amount ?? 0,
+                     note:   saved ? (saved.note ?? DEFAULT_STATIC[p.id]?.note ?? '')     : DEFAULT_STATIC[p.id]?.note ?? '' };
+  });
+  // 兼容旧 v2 格式
+  const raw2 = localStorage.getItem(STATIC_KEY);
+  if (raw2 && !raw) {
+    try {
+      const saved = JSON.parse(raw2);
+      PLATFORM_ASSETS.forEach(p => {
+        const s = saved.find(x => x.id === p.id);
+        if (s) result[p.id] = { amount: s.amount ?? result[p.id].amount, note: s.note ?? result[p.id].note };
+      });
+    } catch(e) {}
+  }
+  return result;
+}
+
+// 读取自定义资产（v3新增）
+function loadCustomAssets() {
+  const raw = localStorage.getItem('staticAssets_v3');
   try {
-    const raw = localStorage.getItem(STATIC_KEY);
     if (raw) {
-      const saved = JSON.parse(raw);
-      return Object.fromEntries(
-        PLATFORM_ASSETS.map(p => {
-          const s = saved.find(x => x.id === p.id);
-          return [p.id, { amount: s ? (s.amount ?? DEFAULT_STATIC[p.id].amount) : DEFAULT_STATIC[p.id].amount, note: s ? (s.note ?? DEFAULT_STATIC[p.id].note) : DEFAULT_STATIC[p.id].note }];
-        })
-      );
+      const all = JSON.parse(raw);
+      return all.filter(x => !PLATFORM_ASSETS.find(p => p.id === x.id));
     }
   } catch(e) {}
-  return Object.fromEntries(PLATFORM_ASSETS.map(p => [p.id, { ...DEFAULT_STATIC[p.id] }]));
+  return [];
 }
 
 function loadHoldings() {
@@ -397,35 +420,109 @@ function getHoldingValue(h) {
 }
 
 // ── API ──────────────────────────────────────────────────
+// ── 修复①：先用搜索API获取正确secid，再取实时价格 ──────
 async function fetchStock(code) {
-  const secid = code.startsWith('6') ? `1.${code}` : `0.${code}`;
-  const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f46,f57,f58,f169,f170&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=jQuery&_=${Date.now()}`;
-  const text = await fetch(url).then(r => r.text()).catch(() => null);
-  if (!text) return null;
   try {
-    const json = JSON.parse(text.replace(/^jQuery\(/, '').replace(/\)$/, ''));
-    const d = json.data;
-    if (!d) return null;
-    const price = d.f43 ? d.f43 / 100 : (d.f169 ? d.f169 / 100 : 0);
-    const prev  = d.f169 ? d.f169 / 100 : (d.f46 ? d.f46 / 100 : price);
-    const chg   = d.f170 ? d.f170 / 100 : 0;
-    return { name: d.f58, price, prev, chg };
-  } catch { return null; }
+    // 第一步：搜索API获取正确名称和secid
+    const searchUrl = `https://searchapi.eastmoney.com/api/suggest/get?input=${code}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&count=5&_=${Date.now()}`;
+    const searchText = await fetch(searchUrl, { headers: { 'Referer': 'https://www.eastmoney.com' } }).then(r => r.text()).catch(() => null);
+
+    let secid = null;
+    let name = code;
+
+    if (searchText) {
+      try {
+        const searchJson = JSON.parse(searchText);
+        const data = searchJson?.QuotationCodeTable?.Data;
+        if (data && data.length > 0) {
+          const match = data.find(d => d.Code === code) || data.find(d => d.Code.startsWith(code));
+          if (match) {
+            secid = match.SecuID;
+            name = match.Name || match.SecuName || code;
+          }
+        }
+      } catch(e) {}
+    }
+
+    // 兜底：按代码规则判断市场
+    if (!secid) {
+      if (code.startsWith('6') || code.startsWith('688')) secid = `1.${code}`;
+      else if (code.startsWith('8')) secid = `0.${code}`;
+      else secid = `0.${code}`;
+    }
+
+    // 第二步：用secid获取实时价格
+    const priceUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f46,f57,f58,f169,f170&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=cb&_=${Date.now()}`;
+    const priceText = await fetch(priceUrl, { headers: { 'Referer': 'https://www.eastmoney.com' } }).then(r => r.text()).catch(() => null);
+
+    if (!priceText) return null;
+    const priceMatch = priceText.match(/cb\((.+)\)/);
+    if (!priceMatch) return null;
+    const priceJson = JSON.parse(priceMatch[1]);
+    const d = priceJson.data;
+    if (!d) {
+      // 尝试另一个市场
+      const altSecid = secid.startsWith('1.') ? `0.${code}` : `1.${code}`;
+      const retryUrl = `https://push2.eastmoney.com/api/qt/stock/get?secid=${altSecid}&fields=f43,f46,f57,f58,f169,f170&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=cb&_=${Date.now()}`;
+      const retryText = await fetch(retryUrl, { headers: { 'Referer': 'https://www.eastmoney.com' } }).then(r => r.text()).catch(() => null);
+      if (!retryText) return null;
+      const retryMatch = retryText.match(/cb\((.+)\)/);
+      if (!retryMatch) return null;
+      const retryJson = JSON.parse(retryMatch[1]);
+      const d2 = retryJson.data;
+      if (!d2) return null;
+      return { name: d2.f58 || name, price: d2.f43 ? d2.f43/100 : 0, prev: d2.f169 ? d2.f169/100 : (d2.f46 ? d2.f46/100 : 0), chg: d2.f170 ? d2.f170/100 : 0 };
+    }
+    if (d.f58) name = d.f58;
+    const price = d.f43 ? d.f43/100 : 0;
+    const prev  = d.f169 ? d.f169/100 : (d.f46 ? d.f46/100 : 0);
+    const chg   = d.f170 ? d.f170/100 : 0;
+    return { name, price, prev, chg };
+  } catch(e) { return null; }
 }
 
+// ── 修复②：基金净值改用东方财富历史净值接口（昨收更准确） ──
 async function fetchFund(code) {
-  const url = `https://fundgz.1234567.com.cn/js/${code}.js?rt=${Date.now()}`;
-  const text = await fetch(url).then(r => r.text()).catch(() => null);
-  if (!text) return null;
   try {
-    const inner = text.match(/^fundgz\((.+)\)$/);
-    if (!inner) return null;
-    const d = JSON.parse(inner[1]);
-    const price = parseFloat(d.gsz);
-    const prev  = parseFloat(d.dwjz) || price;
-    const chg   = parseFloat(d.gszzz) || 0;
-    return { name: d.name, price: !isNaN(price) ? price : prev, prev, chg };
-  } catch { return null; }
+    // 优先天天基金实时估值
+    const url = `https://fundgz.1234567.com.cn/js/${code}.js?rt=${Date.now()}`;
+    const text = await fetch(url).then(r => r.text()).catch(() => null);
+
+    let price = 0, prev = 0, chg = 0, name = code;
+
+    if (text) {
+      const inner = text.match(/^fundgz\((.+)\)$/);
+      if (inner) {
+        const d = JSON.parse(inner[1]);
+        name = d.name || code;
+        price = parseFloat(d.gsz) || 0;
+        prev  = parseFloat(d.dwjz) || 0;
+        chg   = parseFloat(d.gszzz) || 0;
+      }
+    }
+
+    // 兜底：从东方财富获取历史净值（昨收）
+    if (!prev) {
+      try {
+        const histUrl = `https://api.fund.eastmoney.com/f10/lsjz?callback=jQuery&fundCode=${code}&pageIndex=1&pageSize=2&_=${Date.now()}`;
+        const histText = await fetch(histUrl, { headers: { 'Referer': 'https://fund.eastmoney.com', 'User-Agent': 'Mozilla/5.0' } }).then(r => r.text()).catch(() => null);
+        if (histText) {
+          const m = histText.match(/jQuery\((.+)\)/);
+          if (m) {
+            const j = JSON.parse(m[1]);
+            const ds = j?.Data?.Datas;
+            if (ds && ds.length > 0) {
+              if (!prev && ds[0].DWJZ) prev = parseFloat(ds[0].DWJZ);
+              if (ds.length > 1 && !prev) prev = parseFloat(ds[1].DWJZ);
+              if (!name || name === code) name = ds[0].FUNDNAME || code;
+            }
+          }
+        }
+      } catch(e) {}
+    }
+
+    return { name, price: price > 0 ? price : prev, prev: prev > 0 ? prev : price, chg };
+  } catch(e) { return null; }
 }
 
 async function refreshPrices() {
@@ -452,28 +549,30 @@ let charts = {};
 function buildData() {
   const stockVal = holdings.filter(h => h.type === 'stock').reduce((s, h) => s + getHoldingValue(h), 0);
   const fundVal  = holdings.filter(h => h.type === 'fund').reduce((s, h) => s + getHoldingValue(h), 0);
-  const cashVal  = staticData.cash.amount;
-  const yueVal    = staticData.yuebao.amount;
-  const wxVal     = staticData.wechat.amount;
-  const goldVal   = staticData.gold.amount;
-  const insVal    = staticData.insurance.amount;
 
-  const platformList = [
-    { ...PLATFORM_ASSETS.find(p => p.id==='cash'),      amount: cashVal },
-    { ...PLATFORM_ASSETS.find(p => p.id==='yuebao'),    amount: yueVal  },
-    { ...PLATFORM_ASSETS.find(p => p.id==='wechat'),    amount: wxVal   },
-    { ...PLATFORM_ASSETS.find(p => p.id==='gold'),      amount: goldVal },
-    { ...PLATFORM_ASSETS.find(p => p.id==='insurance'), amount: insVal  },
-  ];
+  // 内置平台资产
+  const platformList = PLATFORM_ASSETS.map(p => ({
+    ...p,
+    amount: staticData[p.id]?.amount ?? 0,
+  }));
 
+  // 自定义静态资产（从v3读取）
+  const customList = loadCustomAssets().map(c => ({
+    id: c.id, icon: '📦', name: c.name || c.id, color: '#64748B', amount: c.amount || 0
+  }));
+  const allPlatformList = [...platformList, ...customList];
+
+  const cashVal = (staticData.cash?.amount || 0);
+  const yueVal   = (staticData.yuebao?.amount || 0);
+  const wxVal    = (staticData.wechat?.amount || 0);
   const typeList = [
     { id:'stock', icon:'📈', name:'股票', color:'#34d399', amount: stockVal },
     { id:'fund',  icon:'💹', name:'基金', color:'#a78bfa', amount: fundVal  },
     { id:'cash',  icon:'💵', name:'现金', color:'#38bdf8', amount: cashVal + yueVal + wxVal },
   ];
 
-  const total = platformList.reduce((s, a) => s + a.amount, 0) + stockVal + fundVal;
-  return { total, platformList, typeList };
+  const total = allPlatformList.reduce((s, a) => s + a.amount, 0) + stockVal + fundVal;
+  return { total, platformList: allPlatformList, typeList };
 }
 
 function renderCard(item, total, prefix) {
