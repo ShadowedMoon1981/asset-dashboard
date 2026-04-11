@@ -631,16 +631,20 @@ function saveHoldings() {
 
 // ---- API: 获取单只股票实时价格（东方财富） ----
 async function fetchStockPrice(code) {
-  // 判断沪深交易所：沪市6开头，深市0/3开头
+  // secid: 1=沪市(6开头), 0=深市(0/3开头)
   const secid = code.startsWith('6') ? `1.${code}` : `0.${code}`;
-  const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f170&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=jQuery`;
+  const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170&ut=fa5fd1943c7b386f172d6893dbfba10b&cb=jQuery`;
   const text = await fetch(url).then(r => r.text()).catch(() => null);
   if (!text) return null;
   try {
     const json = JSON.parse(text.replace(/^jQuery\(/, '').replace(/\)$/, ''));
     const d = json.data;
     if (!d) return null;
-    return { name: d.f58, price: d.f43 / 100, change: d.f43 ? ((d.f43 - d.f46) / d.f46 * 100) : 0, prevClose: d.f46 / 100 };
+    // f43=最新价(分), f46=昨收(分), f170=涨跌幅(百分之一%)
+    const price = d.f43 ? d.f43 / 100 : (d.f169 ? d.f169 / 100 : 0);
+    const prevClose = d.f46 ? d.f46 / 100 : price;
+    const changePct = d.f170 ? d.f170 / 100 : 0;
+    return { name: d.f58, price, change: changePct, prevClose };
   } catch { return null; }
 }
 
@@ -650,10 +654,15 @@ async function fetchFundPrice(code) {
   const text = await fetch(url).then(r => r.text()).catch(() => null);
   if (!text) return null;
   try {
-    const m = text.match(/\(\{([^)]+)\}\)/);
-    if (!m) return null;
-    const d = JSON.parse(`{${m[1]}}`);
-    return { name: d.name, price: parseFloat(d.gsz), change: parseFloat(d.gszzz) };
+    // 格式: fundgz({...})  — 先取括号内所有内容，再解析 JSON
+    const inner = text.match(/^fundgz\((.+)\)$/);
+    if (!inner) return null;
+    const d = JSON.parse(inner[1]);
+    // gsz=估算净值, gszzz=估算涨跌幅(%字符串), dwjz=昨日净值(兜底)
+    const price = parseFloat(d.gsz);
+    const prevClose = parseFloat(d.dwjz) || price;
+    const changePct = parseFloat(d.gszzz) || 0;
+    return { name: d.name, price: isNaN(price) ? prevClose : price, change: changePct, prevClose };
   } catch { return null; }
 }
 
