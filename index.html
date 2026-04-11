@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人资产管理看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #273549;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #4ade80;
+      --accent-red: #f87171;
+      --accent-yellow: #fbbf24;
+      --accent-purple: #c084fc;
+      --border: #334155;
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green), var(--accent-purple));
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header .date {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .total-assets {
+      margin-top: 20px;
+      padding: 25px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(74, 222, 128, 0.15));
+      border-radius: 16px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .total-assets .label {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .total-assets .amount {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent-green);
+      text-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px var(--shadow);
+      border-color: var(--accent-blue);
+    }
+
+    .kpi-card .icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .kpi-card .label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .kpi-card .amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .kpi-card .percent {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .chart-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+
+    /* Data Table */
+    .table-section {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .table-section h3 {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    tr:hover {
+      background: var(--bg-card-hover);
+    }
+
+    td {
+      font-size: 0.95rem;
+    }
+
+    .rank {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1e293b; }
+    .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #1e293b; }
+    .rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #1e293b; }
+    .rank-default { background: var(--bg-card-hover); color: var(--text-secondary); }
+
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .header h1 {
+        font-size: 1.6rem;
+      }
+
+      .total-assets .amount {
+        font-size: 2rem;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-container {
+        height: 250px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .kpi-card .amount {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>💰 个人资产管理看板</h1>
+      <p class="date" id="currentDate"></p>
+      <div class="total-assets">
+        <div class="label">💎 总资产（人民币元）</div>
+        <div class="amount" id="totalAssets">¥0</div>
+      </div>
+    </header>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>📊 资产结构分布</h3>
+        <div class="chart-container">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>📈 各类资产金额对比</h3>
+        <div class="chart-container">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Table -->
+    <div class="table-section">
+      <h3>📋 资产明细一览</h3>
+      <table id="assetTable">
+        <thead>
+          <tr>
+            <th>排名</th>
+            <th>资产类别</th>
+            <th>金额（元）</th>
+            <th>占比</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      <p>数据更新时间：<span id="updateTime"></span></p>
+      <p style="margin-top: 8px;">📌 修改下方 assets 数据即可更新所有图表</p>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 📌 在这里修改你的资产数据！
+    // ==========================================
+    const assets = [
+      {
+        name: '💵 现金',
+        amount: 50000,
+        color: '#38bdf8',
+        note: '家庭备用金'
+      },
+      {
+        name: '📈 股票',
+        amount: 120000,
+        color: '#4ade80',
+        note: 'A股 + 港股'
+      },
+      {
+        name: '💹 基金',
+        amount: 80000,
+        color: '#c084fc',
+        note: '指数基金 + 主动基'
+      },
+      {
+        name: '🐙 余额宝',
+        amount: 30000,
+        color: '#fbbf24',
+        note: '日常零花'
+      },
+      {
+        name: '💬 微信钱包',
+        amount: 5000,
+        color: '#22c55e',
+        note: '零钱通'
+      }
+    ];
+    // ==========================================
+
+    // Current date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+    document.getElementById('currentDate').textContent = dateStr;
+    document.getElementById('updateTime').textContent = now.toLocaleString('zh-CN');
+
+    // Calculate total
+    const total = assets.reduce((sum, a) => sum + a.amount, 0);
+
+    // Update total
+    document.getElementById('totalAssets').textContent = '¥' + total.toLocaleString();
+
+    // Sort assets by amount
+    const sortedAssets = [...assets].sort((a, b) => b.amount - a.amount);
+
+    // KPI Cards
+    const kpiGrid = document.getElementById('kpiGrid');
+    sortedAssets.forEach(asset => {
+      const percent = ((asset.amount / total) * 100).toFixed(1);
+      const card = document.createElement('div');
+      card.className = 'kpi-card';
+      card.innerHTML = `
+        <div class="icon">${asset.name.split(' ')[0]}</div>
+        <div class="label">${asset.name.split(' ')[1]}</div>
+        <div class="amount" style="color: ${asset.color}">¥${asset.amount.toLocaleString()}</div>
+        <div class="percent">占比 ${percent}%</div>
+      `;
+      kpiGrid.appendChild(card);
+    });
+
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: assets.map(a => a.name.split(' ')[1]),
+        datasets: [{
+          data: assets.map(a => a.amount),
+          backgroundColor: assets.map(a => a.color),
+          borderWidth: 0,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              color: '#f1f5f9',
+              padding: 15,
+              font: { size: 13 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const val = ctx.parsed;
+                const pct = ((val / total) * 100).toFixed(1);
+                return ` ¥${val.toLocaleString()} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Bar Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: sortedAssets.map(a => a.name.split(' ')[1]),
+        datasets: [{
+          label: '金额（元）',
+          data: sortedAssets.map(a => a.amount),
+          backgroundColor: sortedAssets.map(a => a.color),
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ¥${ctx.parsed.x.toLocaleString()}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.1)' },
+            ticks: {
+              color: '#94a3b8',
+              callback: v => '¥' + v.toLocaleString()
+            }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#f1f5f9', font: { size: 13 } }
+          }
+        }
+      }
+    });
+
+    // Table
+    const tbody = document.querySelector('#assetTable tbody');
+    sortedAssets.forEach((asset, i) => {
+      const rank = i + 1;
+      const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-default';
+      const percent = ((asset.amount / total) * 100).toFixed(1);
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><span class="rank ${rankClass}">${rank}</span></td>
+        <td><strong>${asset.name}</strong></td>
+        <td style="color: ${asset.color}; font-weight: 600;">¥${asset.amount.toLocaleString()}</td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="flex: 1; background: var(--bg-card-hover); border-radius: 4px; height: 8px; overflow: hidden;">
+              <div style="width: ${percent}%; height: 100%; background: ${asset.color}; border-radius: 4px;"></div>
+            </div>
+            <span style="min-width: 50px;">${percent}%</span>
+          </div>
+        </td>
+        <td style="color: var(--text-secondary);">${asset.note}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  </script>
+</body>
+</html>
