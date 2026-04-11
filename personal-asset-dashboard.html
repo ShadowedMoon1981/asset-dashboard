@@ -484,20 +484,21 @@ async function fetchStock(code) {
 // ── 修复②：基金净值改用东方财富历史净值接口（昨收更准确） ──
 async function fetchFund(code) {
   try {
-    // 优先天天基金实时估值
+    // 天天基金实时估值：返回 jsonpgz({...})，含名称/估算净值/单位净值
     const url = `https://fundgz.1234567.com.cn/js/${code}.js?rt=${Date.now()}`;
-    const text = await fetch(url).then(r => r.text()).catch(() => null);
+    const text = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.text()).catch(() => null);
 
     let price = 0, prev = 0, chg = 0, name = code;
 
     if (text) {
-      const inner = text.match(/^fundgz\((.+)\)$/);
+      // 兼容 jsonpgz 和 fundgz 两种格式，API响应末尾有 }); 需兼容
+      const inner = text.match(/^(?:jsonpgz|fundgz)\((.+)\)(?:;|$)/);
       if (inner) {
         const d = JSON.parse(inner[1]);
         name = d.name || code;
         price = parseFloat(d.gsz) || 0;
         prev  = parseFloat(d.dwjz) || 0;
-        chg   = parseFloat(d.gszzz) || 0;
+        chg   = parseFloat(d.gszzl || d.gszzz) || 0;
       }
     }
 
@@ -510,11 +511,11 @@ async function fetchFund(code) {
           const m = histText.match(/jQuery\((.+)\)/);
           if (m) {
             const j = JSON.parse(m[1]);
-            const ds = j?.Data?.Datas;
-            if (ds && ds.length > 0) {
-              if (!prev && ds[0].DWJZ) prev = parseFloat(ds[0].DWJZ);
-              if (ds.length > 1 && !prev) prev = parseFloat(ds[1].DWJZ);
-              if (!name || name === code) name = ds[0].FUNDNAME || code;
+            const DS = j?.Data?.LSJZList || j?.Data?.Datas;
+            if (DS && DS.length > 0) {
+              if (!prev && DS[0].DWJZ) prev = parseFloat(DS[0].DWJZ);
+              if (DS.length > 1 && !prev) prev = parseFloat(DS[1].DWJZ);
+              if (!name || name === code) name = DS[0].FUNDNAME || code;
             }
           }
         }
