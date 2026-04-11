@@ -315,7 +315,11 @@ async function fetchPricesForAll() {
   btn.classList.add('loading'); btn.textContent = '⏳ 刷新中…';
 
   for (const item of needsFetch) {
-    await fetchSinglePrice(item);
+    if (item.type === 'stock') {
+      await fetchStockPrice(item);
+    } else {
+      await fetchFundPrice(item);
+    }
     await new Promise(r => setTimeout(r, 200)); // 限速
   }
   saveToStorage();
@@ -326,23 +330,48 @@ async function fetchPricesForAll() {
   document.getElementById('lastUpdated').innerHTML = '<span class="updating-dot"></span>更新于 ' + now;
 }
 
-async function fetchSinglePrice(item) {
+// ─── 股票价格（东方财富） ─────────────────────────────────
+async function fetchStockPrice(item) {
   try {
-    // 东方财富行情接口
-    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${item.type==='stock'?'1':'2'}.${item.code}&fields=f43,f57,f58,f107,f169,f170&cb=cb`;
-    const resp = await fetch(url);
-    const text = await resp.text();
-    const match = text.match(/cb\((.*)\)/);
+    // secid: 1=沪市(6开头), 0=深市(0/3开头)
+    const secid = item.code.startsWith('6') ? `1.${item.code}` : `0.${item.code}`;
+    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f46,f57,f58,f169,f170&cb=cb`;
+    const text = await fetch(url).then(r => r.text()).catch(() => null);
+    if (!text) return;
+    const match = text.match(/cb\((.+)\)/);
     if (!match) return;
-    const data = JSON.parse(match[1]);
-    if (!data.data) return;
-    const d = data.data;
-    item.price = (d.f43 || 0) / 100;        // 最新价（分转元）
-    item.changePct = (d.f170 || 0) / 100; // 涨跌幅（%）
-    item.name = d.f58 || item.code;       // 名称
-  } catch(e) {
-    // 静默失败，价格保持为0
-  }
+    const json = JSON.parse(match[1]);
+    const d = json.data;
+    if (!d) return;
+    // f43=最新价(分), f169=昨收(分), f170=涨跌幅(万分之一%)
+    const price = d.f43 ? d.f43 / 100 : 0;
+    const prevClose = d.f169 ? d.f169 / 100 : (d.f46 ? d.f46 / 100 : 0);
+    const changePct = d.f170 ? d.f170 / 100 : 0;
+    item.name = d.f58 || item.code;
+    item.price = price > 0 ? price : prevClose;          // 实时价，暂无则用昨收
+    item.prevClose = prevClose;
+    item.changePct = changePct;
+    item.lastFetched = Date.now();
+  } catch(e) { /* 静默 */ }
+}
+
+// ─── 基金净值（天天基金网） ────────────────────────────────
+async function fetchFundPrice(item) {
+  try {
+    const url = `https://fundgz.1234567.com.cn/js/${item.code}.js?rt=${Date.now()}`;
+    const text = await fetch(url).then(r => r.text()).catch(() => null);
+    if (!text) return;
+    const inner = text.match(/^fundgz\((.+)\)$/);
+    if (!inner) return;
+    const d = JSON.parse(inner[1]);
+    const price = parseFloat(d.gsz);
+    const prevClose = parseFloat(d.dwjz) || 0;
+    item.name = d.name || item.code;
+    item.price = !isNaN(price) ? price : prevClose;       // 实时估值，无则用昨收
+    item.prevClose = prevClose;
+    item.changePct = parseFloat(d.gszzz) || 0;
+    item.lastFetched = Date.now();
+  } catch(e) { /* 静默 */ }
 }
 
 // Alias
@@ -365,8 +394,13 @@ function renderTable() {
     const isDown = h.changePct < 0;
     const priceClass = isUp ? 'price-up' : isDown ? 'price-down' : 'price-flat';
     const changeClass = isUp ? 'change-pos' : isDown ? 'change-neg' : 'price-flat';
-    const marketVal = h.price > 0 ? h.price * h.shares : 0;
-    const priceStr = h.price > 0 ? '¥' + h.price.toFixed(2) : '<span style="color:#475569">加载中…</span>';
+    // 显示价格：实时价 > 昨收价 > 待获取
+    const displayPrice = h.price > 0 ? h.price : (h.prevClose > 0 ? h.prevClose : null);
+    const isRealtime = h.price > 0;
+    const marketVal = displayPrice ? displayPrice * h.shares : 0;
+    const priceStr = displayPrice
+      ? '¥' + displayPrice.toFixed(2) + (isRealtime ? '' : ' <span style="font-size:10px;color:#475569">(昨收)</span>')
+      : '<span style="color:#475569">获取中…</span>';
     const pctStr = h.changePct !== 0 ? (isUp ? '+' : '') + h.changePct.toFixed(2) + '%' : '—';
     const valStr = marketVal > 0 ? '¥' + formatNum(marketVal) : '—';
     const typeLabel = h.type === 'stock' ? '股票' : '基金';
@@ -391,7 +425,8 @@ function renderTable() {
 function updateSummary() {
   let stockVal = 0, stockCnt = 0, fundVal = 0, fundCnt = 0;
   holdings.forEach(h => {
-    const val = h.price > 0 ? h.price * h.shares : 0;
+    // 实时价优先，昨收作兜底
+    const val = (h.price > 0 ? h.price : (h.prevClose > 0 ? h.prevClose : 0)) * h.shares;
     if (h.type === 'stock') { stockVal += val; stockCnt++; }
     else { fundVal += val; fundCnt++; }
   });
