@@ -206,7 +206,7 @@
 
 <script>
 // ─── State ─────────────────────────────────────────────────
-const STORAGE_KEY = 'asset_holdings_v3';
+const STORAGE_KEY = 'assetHoldings';
 let currentType = 'stock';
 let holdings = [];
 let deleteTargetIndex = -1;
@@ -250,11 +250,11 @@ function handleAddOrUpdate() {
   if (!shares || shares <= 0) { showToast('请输入有效份数', 'error'); return; }
 
   if (editIdx >= 0) {
-    holdings[editIdx] = { ...holdings[editIdx], code, shares, note, type: currentType, price: 0, changePct: 0, name: code };
+    holdings[editIdx] = { ...holdings[editIdx], code, shares, qty: shares, note, type: currentType, price: 0, changePct: 0, name: code };
     showToast('持仓已更新', 'success');
   } else {
     if (holdings.find(h => h.code === code && h.type === currentType)) { showToast('该持仓已存在', 'error'); return; }
-    holdings.push({ type: currentType, code, name: code, price: 0, changePct: 0, shares, note, lastFetched: null });
+    holdings.push({ type: currentType, code, name: code, price: 0, changePct: 0, shares, qty: shares, note, lastFetched: null });
     showToast('添加成功，正在获取行情…', 'info');
   }
   saveToStorage();
