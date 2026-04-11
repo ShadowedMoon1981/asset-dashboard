@@ -335,7 +335,7 @@ async function fetchStockPrice(item) {
   try {
     // secid: 1=沪市(6开头), 0=深市(0/3开头)
     const secid = item.code.startsWith('6') ? `1.${item.code}` : `0.${item.code}`;
-    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f46,f57,f58,f169,f170&cb=cb`;
+    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f46,f57,f58,f169,f170&cb=cb&_=${Date.now()}`;
     const text = await fetch(url).then(r => r.text()).catch(() => null);
     if (!text) return;
     const match = text.match(/cb\((.+)\)/);
