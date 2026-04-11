@@ -35,6 +35,23 @@
     .container { max-width: 1400px; margin: 0 auto; }
 
     /* Header */
+    .header-btn {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      padding: 7px 14px;
+      background: rgba(79,70,229,0.15);
+      border: 1px solid rgba(79,70,229,0.3);
+      border-radius: 8px;
+      color: #818CF8;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .header-btn:hover { background: rgba(79,70,229,0.25); }
+    .header { position: relative; }
     .header {
       text-align: center;
       margin-bottom: 40px;
@@ -451,6 +468,7 @@
 
     <!-- Header -->
     <header class="header">
+      <a href="holdings-manager.html" class="header-btn">📊 持仓管理</a>
       <h1>💰 个人资产管理看板</h1>
       <p class="date" id="currentDate"></p>
       <div class="total-assets">
