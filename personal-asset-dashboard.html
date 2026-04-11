@@ -532,7 +532,7 @@
     <!-- Static Assets -->
     <div class="static-section">
       <h3>💵 其他资产（手动输入金额）</h3>
-      <div class="static-hint">💡 直接修改下方金额，图表会自动实时更新（金额单位：元）</div>
+      <div class="static-hint">💡 直接修改下方金额，数据自动保存到浏览器；切换页面后回到这里自动同步（金额单位：元）</div>
       <div class="static-grid" id="staticGrid"></div>
     </div>
 
@@ -559,13 +559,35 @@
 // ================================================================
 // 📌 静态资产配置（黄金、保险等直接输金额的资产）
 // ================================================================
-const staticAssets = [
+const STATIC_ASSETS_KEY = 'staticAssets_v2';
+const DEFAULT_STATIC_ASSETS = [
   { id: 'cash',      name: '💵 现金',       color: '#38bdf8', note: '家庭备用金',      amount: 50000  },
   { id: 'yuebao',    name: '🐙 余额宝',     color: '#fbbf24', note: '日常零花',        amount: 30000  },
   { id: 'wechat',   name: '💬 微信钱包',   color: '#22c55e', note: '零钱通',          amount: 5000   },
   { id: 'gold',      name: '🥇 黄金',       color: '#f59e0b', note: '实物金/纸黄金',   amount: 20000  },
   { id: 'insurance', name: '🛡️ 保险',       color: '#a78bfa', note: '储蓄型/年金险',   amount: 50000  },
 ];
+
+// 从 localStorage 加载，兜底默认值
+function loadStaticAssets() {
+  try {
+    const raw = localStorage.getItem(STATIC_ASSETS_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // 合并：保留默认字段但用保存的值
+      return DEFAULT_STATIC_ASSETS.map(def => {
+        const s = saved.find(x => x.id === def.id);
+        return s ? { ...def, amount: s.amount ?? def.amount, note: s.note ?? def.note } : def;
+      });
+    }
+  } catch(e) {}
+  return DEFAULT_STATIC_ASSETS.map(a => ({...a}));
+}
+function saveStaticAssets() {
+  localStorage.setItem(STATIC_ASSETS_KEY, JSON.stringify(staticAssets));
+}
+
+let staticAssets = loadStaticAssets();
 
 // ================================================================
 // 📌 持仓数据（自动计算市值）
@@ -575,14 +597,26 @@ const staticAssets = [
 //  - note: 备注
 // ================================================================
 let holdings = JSON.parse(localStorage.getItem('assetHoldings') || 'null');
-if (!holdings) {
+if (!holdings || !Array.isArray(holdings) || holdings.length === 0) {
   holdings = [
     { type:'stock', code:'600519', qty:100,  note:'贵州茅台',     price:0, totalValue:0, updatedAt:null },
-    { type:'stock', code:'000858', qty:1000,  note:'五粮液',       price:0, totalValue:0, updatedAt:null },
-    { type:'fund',  code:'110022', qty:5000,  note:'易方达消费',   price:0, totalValue:0, updatedAt:null },
-    { type:'fund',  code:'000961', qty:3000,  note:'天弘沪深300',  price:0, totalValue:0, updatedAt:null },
+    { type:'stock', code:'000858', qty:1000, note:'五粮液',       price:0, totalValue:0, updatedAt:null },
+    { type:'fund',  code:'110022', qty:5000, note:'易方达消费',   price:0, totalValue:0, updatedAt:null },
+    { type:'fund',  code:'000961', qty:3000, note:'天弘沪深300',  price:0, totalValue:0, updatedAt:null },
   ];
   saveHoldings();
+} else {
+  // 兼容旧数据格式：shares → qty
+  holdings = holdings.map(h => ({
+    ...h,
+    qty: h.qty ?? h.shares ?? 0,
+    shares: h.shares ?? h.qty ?? 0,
+    price: h.price ?? 0,
+    totalValue: h.price > 0 ? h.price * (h.qty ?? h.shares ?? 0) : (h.totalValue ?? 0),
+    note: h.note ?? '',
+    type: h.type ?? 'stock',
+    updatedAt: h.lastFetched ?? h.updatedAt ?? null,
+  }));
 }
 
 let stockTotalValue = 0;
@@ -809,7 +843,7 @@ function renderStaticInputs() {
 
 function updateStaticAmount(id, val) {
   const asset = staticAssets.find(a => a.id === id);
-  if (asset) { asset.amount = parseFloat(val) || 0; renderAll(); }
+  if (asset) { asset.amount = parseFloat(val) || 0; saveStaticAssets(); renderAll(); }
 }
 
 // ---- 汇总所有资产 ----
@@ -927,6 +961,21 @@ renderStaticInputs();
 renderHoldings();
 renderAll();
 refreshPrices();
+
+// ── 回到此页面时自动刷新（持仓管理页修改后回来立即同步）────────
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    staticAssets = loadStaticAssets();       // 重读静态资产
+    const rawHoldings = localStorage.getItem('assetHoldings');
+    if (rawHoldings) {
+      holdings = JSON.parse(rawHoldings);
+    }
+    renderStaticInputs();
+    renderHoldings();
+    renderAll();
+    refreshPrices();
+  }
+});
 </script>
 </body>
 </html>
