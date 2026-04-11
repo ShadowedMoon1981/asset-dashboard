@@ -621,27 +621,30 @@ async function fetchStockPrice(item) {
 // ─── 修复②：基金净值 ── 改用东方财富基金接口获取昨收 ───
 async function fetchFundPrice(item) {
   try {
-    // 优先用东方财富基金数据接口（含历史净值）
+    // 天天基金实时估值：返回格式为 jsonpgz({...})，含名称、估算净值、单位净值
     const url = `https://fundgz.1234567.com.cn/js/${item.code}.js?rt=${Date.now()}`;
-    const text = await fetch(url).then(r => r.text()).catch(() => null);
+    const text = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(r => r.text()).catch(() => null);
 
     let price = 0, prevClose = 0, changePct = 0, name = item.code;
 
     if (text) {
-      const inner = text.match(/^fundgz\((.+)\)$/);
+      // 兼容 jsonpgz 和 fundgz 两种格式，API响应末尾有 }); 需兼容
+      const inner = text.match(/^(?:jsonpgz|fundgz)\((.+)\)(?:;|$)/);
       if (inner) {
         const d = JSON.parse(inner[1]);
         name = d.name || item.code;
+        // gsz=估算净值（非交易日为空），dwjz=单位净值（上一个确认净值）
         price = parseFloat(d.gsz) || 0;
-        prevClose = parseFloat(d.dwjz) || 0;  // 单位净值（上一个交易日）
-        changePct = parseFloat(d.gszzz) || 0;
+        prevClose = parseFloat(d.dwjz) || 0;
+        // gszzl=估算涨跌幅（非交易日为空）
+        changePct = parseFloat(d.gszzl || d.gszzz) || 0;
       }
     }
 
-    // 如果没有实时数据，获取历史净值
+    // 如果没有实时/估算数据，从东方财富历史净值兜底
     if (price === 0 || prevClose === 0) {
       try {
-        const histUrl = `https://api.fund.eastmoney.com/f10/lsjz?callback=jQuery&fundCode=${item.code}&pageIndex=1&pageSize=1&startDate=&endDate=&_=${Date.now()}`;
+        const histUrl = `https://api.fund.eastmoney.com/f10/lsjz?callback=jQuery&fundCode=${item.code}&pageIndex=1&pageSize=2&_=${Date.now()}`;
         const histText = await fetch(histUrl, {
           headers: { 'Referer': 'https://fund.eastmoney.com', 'User-Agent': 'Mozilla/5.0' }
         }).then(r => r.text()).catch(() => null);
@@ -651,18 +654,15 @@ async function fetchFundPrice(item) {
           if (histMatch) {
             const histJson = JSON.parse(histMatch[1]);
             const Data = histJson.Data;
-            if (Data && Data.Datas && Data.Datas.length > 0) {
-              const latest = Data.Datas[0];  // 最新一条（昨收）
-              const prev = Data.Datas.length > 1 ? Data.Datas[1] : null;  // 前一条
-              if (price === 0 && latest.DWJZ) price = parseFloat(latest.DWJZ);
-              if (prevClose === 0 && prev && prev.DWJZ) prevClose = parseFloat(prev.DWJZ);
-              else if (prevClose === 0 && latest.DWJZ) {
-                // 用最新净值作为参考价
-                const cur = parseFloat(latest.DWJZ) || 0;
-                const yld = parseFloat(latest.DWJZ) || 0;
-                prevClose = cur;
-              }
-              if (!name || name === item.code) name = latest.FUNDNAME || item.code;
+            const DS = Data?.LSJZList || Data?.Datas;
+            if (DS && DS.length > 0) {
+              // DS[0] = 最新净值日期，DS[1] = 前一工作日净值
+              const latest = DS[0];
+              const prev = DS[1];
+              if (price === 0 && latest?.DWJZ) price = parseFloat(latest.DWJZ);
+              if (prevClose === 0 && prev?.DWJZ) prevClose = parseFloat(prev.DWJZ);
+              else if (prevClose === 0 && latest?.DWJZ) prevClose = parseFloat(latest.DWJZ);
+              if (!name || name === item.code) name = latest?.FUNDNAME || item.code;
             }
           }
         }
