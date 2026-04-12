@@ -208,6 +208,7 @@
             <div class="holdings-actions">
             <button class="btn-refresh" id="refreshBtn" onclick="refreshPrices(true)">🔄 刷新价格</button>
             <button class="btn-export" id="syncBtn" onclick="showSyncModal()">☁️ 同步</button>
+            <button class="btn-tab" id="cloudStatus" onclick="refreshFromGitHub()" style="font-size:11px;padding:5px 10px;background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.3);color:#34D393">💾 本地模式</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -309,16 +310,32 @@
   <!-- 数据同步弹窗 -->
   <div class="modal" id="syncModal">
     <h3>☁️ 数据同步</h3>
-    <p style="font-size:13px;color:#94A3B8;margin-bottom:16px">将持仓数据导出到本地文件，或从文件导入数据（用于多设备同步）</p>
+    <p style="font-size:13px;color:#94A3B8;margin-bottom:12px">数据存储在 GitHub 云端，电脑和手机都能访问同一份数据</p>
+
+    <!-- 云端状态 -->
+    <div id="syncStatusBanner" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:16px">
+      <span id="cloudStatus" style="font-size:13px;color:#64748B">💾 本地模式</span>
+    </div>
+
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn-confirm" onclick="exportData()" style="background:#10B981">
-        <span style="margin-right:6px">📤</span>导出数据
+      <button class="btn-confirm" onclick="refreshFromGitHub()" style="background:#6366F1">
+        <span style="margin-right:6px">📥</span>从云端拉取最新数据
       </button>
-      <button class="btn-confirm" onclick="document.getElementById('importFile').click()" style="background:#6366F1">
-        <span style="margin-right:6px">📥</span>导入数据
+      <button class="btn-confirm" onclick="exportAndSync()" style="background:#10B981">
+        <span style="margin-right:6px">📤</span>导出 &amp; 同步（下载JSON后上传）
+      </button>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:4px 0">
+      <button class="btn-confirm" onclick="exportData()" style="background:#475569">
+        <span style="margin-right:6px">📄</span>仅导出到本地文件
+      </button>
+      <button class="btn-confirm" onclick="document.getElementById('importFile').click()" style="background:#334155">
+        <span style="margin-right:6px">📂</span>从本地文件导入
       </button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importDataFromFile(event)" />
-      <div style="text-align:center;font-size:12px;color:#64748B;margin-top:4px">导出后上传到 GitHub Gist，即可在手机端导入</div>
+      <div style="text-align:center;font-size:11px;color:#475569;margin-top:4px;line-height:1.6">
+        同步流程：导出JSON文件 → 打开 <span style="color:#818CF8">upload_asset_data.ps1</span> → 自动上传到 GitHub<br>
+        之后手机/电脑打开页面，自动读取最新数据
+      </div>
     </div>
     <div class="modal-actions" style="margin-top:16px">
       <button class="btn-cancel" onclick="closeSyncModal()">关闭</button>
@@ -334,6 +351,14 @@
 // ════════════════════════════════════════════════════════
 const HOLDINGS_KEY = 'assetHoldings';
 const STATIC_KEY   = 'staticAssets_v3';  // v3 = 新的含自定义字段的结构
+
+// ════════════════════════════════════════════════════════
+// GitHub 云端同步配置（Token 不在此文件，防止 Secret Scanning）
+// 上传脚本：运行 upload_asset_data.ps1 或 deploy_asset_html.py
+// ════════════════════════════════════════════════════════
+const GITHUB_CONFIG = {
+  rawUrl: 'https://raw.githubusercontent.com/shadowedmoon1981/asset-dashboard/main/data/asset-data.json',
+};
 
 let currentType = 'stock';
 let holdings    = [];
@@ -376,16 +401,139 @@ window.fundjz = function(data) {
 // ════════════════════════════════════════════════════════
 // Init
 // ════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  loadFromStorage();
+let cloudDataSource = null; // 'github' | 'local' | null
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // 优先从 GitHub 加载数据（云端优先策略）
+  const loaded = await loadFromGitHubFirst();
+  if (!loaded) {
+    loadFromStorage();
+  }
   loadStaticAssets();
   renderTable();
   updateSummary();
   renderStaticGrid();
   refreshPrices();
+  updateSyncButton();
   document.getElementById('codeInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); });
   document.getElementById('sharesInput').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g,''); });
 });
+
+// ════════════════════════════════════════════════════════
+// GitHub 云端同步
+// ════════════════════════════════════════════════════════
+
+// 启动时：优先从 GitHub 加载，无则用本地
+async function loadFromGitHubFirst() {
+  const cloudBtn = document.getElementById('cloudStatus');
+  try {
+    const resp = await fetch(GITHUB_CONFIG.rawUrl, { cache: 'no-cache' });
+    if (!resp.ok) throw new Error('GitHub fetch failed');
+    const data = await resp.json();
+    if (data.holdings && Array.isArray(data.holdings)) {
+      holdings = data.holdings;
+      saveHoldings();
+      // 静态资产也同步
+      if (data.staticAssets && Array.isArray(data.staticAssets)) {
+        localStorage.setItem(STATIC_KEY, JSON.stringify(data.staticAssets));
+      }
+      cloudDataSource = 'github';
+      if (cloudBtn) {
+        cloudBtn.textContent = '☁️ 已从云端同步';
+        cloudBtn.style.color = '#34D393';
+      }
+      showToast('已从云端同步持仓数据', 'success');
+      return true;
+    }
+  } catch(e) {
+    console.warn('GitHub 加载失败，使用本地数据:', e);
+    cloudDataSource = 'local';
+    if (cloudBtn) {
+      cloudBtn.textContent = '💾 本地模式';
+      cloudBtn.style.color = '#64748B';
+    }
+  }
+  return false;
+}
+
+// 导出数据 + 同步：下载JSON文件（用于后续上传到GitHub）
+function exportAndSync() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    holdings: holdings,
+    staticAssets: JSON.parse(localStorage.getItem(STATIC_KEY) || '[]')
+  };
+  const jsonStr = JSON.stringify(payload, null, 2);
+
+  // 下载 JSON 文件
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'asset-data-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // 复制内容到剪贴板
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    showToast('已下载JSON文件并复制内容，请在电脑上运行 upload_asset_data.ps1', 'success');
+  }).catch(() => {
+    showToast('JSON文件已下载，请在电脑上运行 upload_asset_data.ps1 上传', 'success');
+  });
+}
+
+// 保留旧方法兼容
+function uploadToGitHub() { exportAndSync(); }
+
+// 从云端刷新（手动）
+async function refreshFromGitHub() {
+  const btn = document.getElementById('refreshFromCloudBtn') || document.getElementById('syncBtn');
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ 拉取中…'; btn.disabled = true; }
+
+  try {
+    const resp = await fetch(GITHUB_CONFIG.rawUrl, { cache: 'no-cache' });
+    if (!resp.ok) throw new Error('获取失败');
+    const data = await resp.json();
+
+    if (!data.holdings || !Array.isArray(data.holdings)) {
+      throw new Error('数据格式错误');
+    }
+
+    if (!confirm(`将从云端导入 ${data.holdings.length} 条持仓，是否覆盖现有数据？`)) {
+      return;
+    }
+
+    holdings = data.holdings;
+    saveHoldings();
+    if (data.staticAssets && Array.isArray(data.staticAssets)) {
+      localStorage.setItem(STATIC_KEY, JSON.stringify(data.staticAssets));
+    }
+    cloudDataSource = 'github';
+    renderTable();
+    updateSummary();
+    renderStaticGrid();
+    showToast('✅ 已从云端拉取最新数据', 'success');
+    updateSyncButton();
+  } catch(e) {
+    showToast('拉取失败: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+  }
+}
+
+function updateSyncButton() {
+  const cloudBtn = document.getElementById('cloudStatus');
+  if (!cloudBtn) return;
+  if (cloudDataSource === 'github') {
+    cloudBtn.textContent = '☁️ 云端同步';
+    cloudBtn.style.color = '#34D393';
+  } else {
+    cloudBtn.textContent = '💾 本地模式';
+    cloudBtn.style.color = '#64748B';
+  }
+}
 
 // ════════════════════════════════════════════════════════
 // Storage - 证券持仓
