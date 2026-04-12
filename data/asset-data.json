@@ -1,0 +1,31 @@
+﻿{
+  "version": 1,
+  "exportedAt": "2026-04-12T12:06:31.2669183+08:00",
+  "holdings": [
+    {"type":"stock","code":"600941","name":"涓浗绉诲姩","price":94,"changePct":0.38,"shares":500,"qty":500,"note":"","secid":"1.600941","market":"a"},
+    {"type":"stock","code":"601318","name":"涓浗骞冲畨","price":58.82,"changePct":0.14,"shares":800,"qty":800,"note":"","secid":"1.601318","market":"a"},
+    {"type":"stock","code":"600036","name":"鎷涘晢閾惰","price":39.21,"changePct":-0.13,"shares":500,"qty":500,"note":"","secid":"1.600036","market":"a"},
+    {"type":"fund","code":"159692","name":"鍒涗笟澶х洏ETF鑱旀帴A","price":1.1754,"prevClose":1.1329,"changePct":3.75,"shares":55790,"qty":55790,"note":"","secid":null},
+    {"type":"fund","code":"021142","name":"鍥借仈瀹夊厓娴烽€氭湁鑹查噾灞濫TF鑱旀帴A","price":1.47,"prevClose":1.4671,"changePct":0.2,"shares":13910,"qty":13910,"note":"","secid":null},
+    {"type":"fund","code":"008163","name":"鍗庡畨鍒涗笟鏉?0ETF鑱旀帴A","price":0,"prevClose":0,"changePct":0,"shares":28311,"qty":28311,"note":"鑾峰彇澶辫触","secid":null},
+    {"type":"fund","code":"007466","name":"鍗庡涓瘉鍏ㄦ寚璇佸埜鍏徃ETF鑱旀帴A","price":1.6454,"prevClose":1.6467,"changePct":-0.08,"shares":17342,"qty":17342,"note":"","secid":null},
+    {"type":"fund","code":"001594","name":"澶╁紭涓瘉閾惰ETF鑱旀帴A","price":1.721,"prevClose":1.7234,"changePct":-0.14,"shares":18895,"qty":18895,"note":"","secid":null},
+    {"type":"fund","code":"013308","name":"骞垮彂鍥借瘉鏂拌兘婧怑TF鑱旀帴(QDII)A","price":1.1655,"prevClose":1.1567,"changePct":0.76,"shares":54890,"qty":54890,"note":"","secid":null},
+    {"type":"fund","code":"012708","name":"姹囨坊瀵屼腑璇佷富瑕佹秷璐笶TF鑱旀帴A","price":1.3674,"prevClose":1.3647,"changePct":0.2,"shares":16513,"qty":16513,"note":"","secid":null},
+    {"type":"fund","code":"000071","name":"鍗庡鎭掔敓ETF鑱旀帴A(缇庡厓)","price":1.5357,"prevClose":1.5277,"changePct":0.52,"shares":13537,"qty":13537,"note":"","secid":null},
+    {"type":"stock","code":"000001","name":"骞冲畨閾惰","price":11.09,"prevClose":-0.01,"changePct":-0.09,"shares":1000,"qty":1000,"note":"","secid":"0.000001","market":"a"},
+    {"type":"fund","code":"520880","name":"鍥借仈瀹変笂璇佸ぇ瀹楀晢鍝丒TF鑱旀帴","price":0.5265,"prevClose":0.525,"changePct":0.29,"shares":55900,"qty":55900,"note":"","secid":null},
+    {"type":"stock","code":"00700","name":"鑵捐鎺ц偂","price":504.5,"prevClose":508.5,"changePct":514,"shares":100,"qty":100,"note":"","secid":"hk00700","market":"hk"},
+    {"type":"stock","code":"09988","name":"闃块噷宸村反-W","price":125.5,"prevClose":122.9,"changePct":127.5,"shares":300,"qty":300,"note":"","secid":"hk09988","market":"hk"},
+    {"type":"stock","code":"00883","name":"涓浗娴锋磱鐭虫补","price":26.52,"prevClose":26.66,"changePct":26.64,"shares":1000,"qty":1000,"note":"","secid":"hk00883","market":"hk"},
+    {"type":"fund","code":"007994","name":"鍗庡涓瘉500鎸囨暟澧炲己A","price":2.5586,"prevClose":2.5358,"changePct":0.9,"shares":46272,"qty":46272,"note":"","secid":null}
+  ],
+  "staticAssets": [
+    {"id":"cash","name":"鐜伴噾/閾惰瀛樻","icon":"馃挵","color":"#fbbf24","amount":167464,"note":"瀹跺涵澶囩敤閲?},
+    {"id":"yuebao","name":"浣欓瀹?,"icon":"馃摫","color":"#4f8ef7","amount":86669,"note":"鏃ュ父闆惰姳"},
+    {"id":"wechat","name":"寰俊闆堕挶閫?,"icon":"馃挰","color":"#07c160","amount":201,"note":"闆堕挶閫?},
+    {"id":"gold","name":"榛勯噾","icon":"馃","color":"#fbbf24","amount":12225,"note":"瀹炵墿閲?绾搁粍閲?},
+    {"id":"insurance","name":"淇濋櫓","icon":"馃洝锔?,"color":"#6366f1","amount":41792,"note":"鍌ㄨ搫鍨?骞撮噾闄?},
+    {"id":"甯綘鎶?,"name":"甯綘鎶?,"icon":"馃","color":"#a78bfa","amount":36095,"note":"鏀粯瀹濈函绠楁硶鑷姩璋冧粨鍩洪噾缁勫悎"}
+  ]
+}
