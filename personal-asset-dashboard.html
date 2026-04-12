@@ -263,8 +263,8 @@
   <div class="hero-inner">
     <div class="hero-top">
       <div class="hero-title">💰 我的资产</div>
+      <span id="heroCloudStatus" style="font-size:12px;color:#64748B;padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:20px">☁️ 加载中…</span>
       <a href="holdings-manager.html" class="hero-refresh">📊 持仓管理</a>
-      <a href="holdings-manager.html" class="hero-refresh" style="color:#34D399">☁️ 同步</a>
     </div>
     <div class="hero-main">
       <div class="hero-total-block">
@@ -326,6 +326,11 @@
 </div>
 
 <script>
+// ── GitHub 云端同步配置 ───────────────────────────────────
+const GITHUB_CONFIG = {
+  rawUrl: 'https://raw.githubusercontent.com/shadowedmoon1981/asset-dashboard/main/data/asset-data.json'
+};
+
 // ── Config ──────────────────────────────────────────────
 const PLATFORM_ASSETS = [
   { id: 'cash',      icon: '💵', name: '现金',       color: '#38bdf8' },
@@ -408,6 +413,27 @@ function loadHoldings() {
   } catch(e) {
     return DEFAULT_HOLDINGS.map(x => ({...x}));
   }
+}
+
+// ── 从 GitHub 加载数据（云端优先）───────────────────────────
+async function loadFromGitHubFirst() {
+  try {
+    const resp = await fetch(GITHUB_CONFIG.rawUrl, { cache: 'no-cache' });
+    if (!resp.ok) throw new Error('GitHub fetch failed');
+    const data = await resp.json();
+    if (data.holdings && Array.isArray(data.holdings) && data.holdings.length > 0) {
+      // 用云端数据覆盖本地，同时更新静态资产
+      const updated = data.holdings.map(x => ({ ...x, qty: x.qty ?? x.shares ?? 0, shares: x.shares ?? x.qty ?? 0 }));
+      localStorage.setItem('assetHoldings', JSON.stringify(updated));
+      if (data.staticAssets && Array.isArray(data.staticAssets)) {
+        localStorage.setItem('staticAssets_v3', JSON.stringify(data.staticAssets));
+      }
+      return updated;
+    }
+  } catch(e) {
+    console.warn('GitHub load failed, using local:', e);
+  }
+  return null;
 }
 
 let staticData = loadStatic();
@@ -695,10 +721,27 @@ function render() {
 }
 
 // ── Init ─────────────────────────────────────────────────
-const today = new Date();
-document.getElementById('updateDate').textContent = today.toLocaleDateString('zh-CN');
-render();
-refreshPrices();
+(async () => {
+  const today = new Date();
+  document.getElementById('updateDate').textContent = today.toLocaleDateString('zh-CN');
+
+  // 优先从 GitHub 加载（云端优先）
+  const cloudHoldings = await loadFromGitHubFirst();
+  if (cloudHoldings) {
+    holdings = cloudHoldings;
+    staticData = loadStatic(); // 重新加载静态资产
+    document.getElementById('heroCloudStatus').textContent = '☁️ 已同步';
+    document.getElementById('heroCloudStatus').style.color = '#34D393';
+    document.getElementById('heroCloudStatus').style.borderColor = 'rgba(52,211,153,0.3)';
+  } else {
+    holdings = loadHoldings();
+    staticData = loadStatic();
+    document.getElementById('heroCloudStatus').textContent = '💾 本地模式';
+  }
+
+  render();
+  refreshPrices();
+})();
 
 // Sync on tab switch
 document.addEventListener('visibilitychange', () => {
