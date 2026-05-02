@@ -1,0 +1,33 @@
+{
+  "updatedAt": "2026/5/2 16:00",
+  "items": [
+    {
+      "id": "a1",
+      "name": "现金",
+      "type": "cash",
+      "amount": 100000,
+      "note": "家庭备用金"
+    },
+    {
+      "id": "a2",
+      "name": "黄金",
+      "type": "gold",
+      "amount": 20000,
+      "note": "实物金/纸黄金"
+    },
+    {
+      "id": "a3",
+      "name": "保险",
+      "type": "insurance",
+      "amount": 50000,
+      "note": "储蓄型/年金险"
+    },
+    {
+      "id": "a4",
+      "name": "帮你投",
+      "type": "bangnitou",
+      "amount": 36095,
+      "note": "支付宝纯算法组合"
+    }
+  ]
+}
