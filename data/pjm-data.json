@@ -1,33 +1,47 @@
 {
-  "updatedAt": "2026/5/2 16:00",
+  "updatedAt": "2026/5/2 15:18",
   "items": [
     {
-      "id": "a1",
+      "id": "s1",
       "name": "现金",
       "type": "cash",
-      "amount": 100000,
-      "note": "家庭备用金"
+      "amount": 123459,
+      "note": ""
     },
     {
-      "id": "a2",
+      "id": "g1",
       "name": "黄金",
       "type": "gold",
-      "amount": 20000,
+      "amount": 21543,
       "note": "实物金/纸黄金"
     },
     {
-      "id": "a3",
+      "id": "i1",
       "name": "保险",
       "type": "insurance",
-      "amount": 50000,
+      "amount": 41792,
       "note": "储蓄型/年金险"
     },
     {
-      "id": "a4",
+      "id": "b1",
       "name": "帮你投",
       "type": "bangnitou",
-      "amount": 36095,
+      "amount": 59354,
       "note": "支付宝纯算法组合"
+    },
+    {
+      "id": "k1",
+      "name": "股票",
+      "type": "stock",
+      "amount": 255959,
+      "note": ""
+    },
+    {
+      "id": "f1",
+      "name": "基金",
+      "type": "fund",
+      "amount": 298245,
+      "note": ""
     }
   ]
 }
