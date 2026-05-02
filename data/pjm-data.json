@@ -1,11 +1,11 @@
 {
-  "updatedAt": "2026/5/2 15:18",
+  "updatedAt": "2026/5/2 16:32:50",
   "items": [
     {
       "id": "s1",
       "name": "现金",
       "type": "cash",
-      "amount": 123459,
+      "amount": 210178,
       "note": ""
     },
     {
