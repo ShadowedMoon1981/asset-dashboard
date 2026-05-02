@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PJM 个人资产看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg:       #0b0f1a;
+      --surface:  #111827;
+      --card:     #1a2236;
+      --card2:    #1e2a3a;
+      --border:   #2a3a52;
+      --border2:  #374563;
+      --text:     #e8edf5;
+      --text2:    #8fa3bf;
+      --text3:    #566480;
+      --blue:     #4f8ef7;
+      --purple:   #a78bfa;
+      --green:    #34d399;
+      --yellow:   #fbbf24;
+      --red:      #f87171;
+      --orange:   #fb923c;
+      --pink:     #f472b6;
+      --cyan:     #22d3ee;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #1a1f3a 0%, #0f172a 40%, #1a0a2e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 24px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 20% 50%, rgba(79,70,229,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(59,130,246,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .hero-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .hero-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .btn-upload {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 16px;
+      background: rgba(79,142,247,0.15);
+      border: 1px solid rgba(79,142,247,0.4);
+      border-radius: 20px;
+      color: var(--blue); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-upload:hover { background: rgba(79,142,247,0.25); border-color: var(--blue); }
+    .btn-upload input[type="file"] { display: none; }
+
+    .btn-action {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text2); font-size: 13px;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-action:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+    .hero-main {
+      display: flex; align-items: flex-end;
+      justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    }
+    .hero-total-label { font-size: 13px; color: var(--text3); margin-bottom: 6px; }
+    .hero-amount {
+      font-size: 3.2rem; font-weight: 800; color: #fff;
+      letter-spacing: -1px; line-height: 1;
+    }
+    .hero-sub { font-size: 12px; color: var(--text3); margin-top: 8px; }
+    .hero-sub span { color: var(--green); }
+
+    /* Type row in hero */
+    .hero-cards { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .hero-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 16px;
+      min-width: 110px; text-align: center;
+      transition: all 0.2s;
+    }
+    .hero-card:hover { background: rgba(255,255,255,0.08); border-color: var(--border2); }
+    .hero-card-icon { font-size: 1.5rem; margin-bottom: 4px; }
+    .hero-card-name { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+    .hero-card-val { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .hero-card-pct { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    /* ── Body ── */
+    .body { max-width: 1100px; margin: 0 auto; padding: 24px 20px 40px; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 36px; }
+    .section-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 14px; font-weight: 600; color: var(--text2);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: ''; width: 3px; height: 16px;
+      background: linear-gradient(to bottom, var(--blue), var(--purple));
+      border-radius: 2px;
+    }
+    .section-note { font-size: 12px; color: var(--text3); }
+
+    /* ── Cards Grid (8 types) ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px; margin-bottom: 18px;
+    }
+    .asset-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      transition: all 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .asset-card-icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .asset-card-name { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+    .asset-card-val {
+      font-size: 1.05rem; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .asset-card-note { font-size: 10px; color: var(--text3); margin-top: 4px; }
+    .asset-card-pct {
+      position: absolute; top: 14px; right: 12px;
+      font-size: 10px; font-weight: 600;
+      padding: 2px 6px; border-radius: 8px;
+    }
+
+    /* ── Charts ── */
+    .charts-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px;
+    }
+    .chart-card-title {
+      font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px;
+    }
+    .chart-wrap { position: relative; height: 260px; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; font-size: 11px; color: var(--text3);
+      padding: 20px; border-top: 1px solid var(--border);
+      max-width: 1100px; margin: 0 auto;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--card2); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 10px 20px;
+      font-size: 13px; color: var(--text); z-index: 9999;
+      transition: transform 0.3s ease; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Edit Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 18px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; }
+    .form-input, .form-select {
+      width: 100%; padding: 9px 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 13px; outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--blue); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-primary {
+      flex: 1; padding: 10px; background: var(--blue); border: none;
+      border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .btn-secondary {
+      flex: 1; padding: 10px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text2); font-size: 14px; cursor: pointer;
+    }
+    .asset-list { max-height: 340px; overflow-y: auto; }
+    .asset-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .asset-item:last-child { border-bottom: none; }
+    .asset-item-icon { font-size: 1.2rem; }
+    .asset-item-name { flex: 1; font-size: 13px; }
+    .asset-item-type { font-size: 11px; color: var(--text3); min-width: 70px; text-align: center; }
+    .asset-item-amount { font-size: 13px; font-weight: 600; color: var(--text); min-width: 80px; text-align: right; }
+    .asset-item-btns { display: flex; gap: 6px; }
+    .asset-item-btn {
+      font-size: 11px; cursor: pointer; padding: 3px 8px;
+      border-radius: 6px; border: 1px solid;
+    }
+    .asset-item-btn.edit { color: var(--blue); border-color: var(--blue); }
+    .asset-item-btn.del { color: var(--red); border-color: var(--red); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .charts-row { grid-template-columns: 1fr; }
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-amount { font-size: 2.4rem; }
+    }
+    @media (max-width: 480px) {
+      .cards-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .hero-amount { font-size: 2rem; }
+      .hero-cards { display: none; }
+    }
+
+    /* Color dot */
+    .color-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+    /* Card top bar */
+    .asset-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--c, #888); border-radius: 14px 14px 0 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="hero-title">💰 PJM 个人资产看板</div>
+      <div class="hero-actions">
+        <label class="btn-upload" for="excelUpload">
+          📤 上传 Excel
+          <input type="file" id="excelUpload" accept=".xlsx,.xls,.csv">
+        </label>
+        <button class="btn-action" onclick="exportExcel()">📥 导出 Excel</button>
+        <button class="btn-action" onclick="openEditModal()">✏️ 编辑数据</button>
+      </div>
+    </div>
+    <div class="hero-main">
+      <div>
+        <div class="hero-total-label">总资产（人民币）</div>
+        <div class="hero-amount" id="totalAmount">¥ 0</div>
+        <div class="hero-sub">数据更新时间：<span id="updateDate">--</span></div>
+      </div>
+      <div class="hero-cards" id="heroCards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="body">
+
+  <!-- 按类型  -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">资产明细</div>
+      <div class="section-note">各账户独立统计</div>
+    </div>
+    <div class="cards-grid" id="assetCards"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-card-title">🍩 资产分布</div>
+        <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">📊 资产对比</div>
+        <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  📌 支持 Excel 上传 · 数据保存在本地浏览器（localStorage）
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">✏️ 编辑资产数据</div>
+    <div class="asset-list" id="assetList"></div>
+    <div style="margin-top:14px">
+      <button class="btn-action" style="width:100%;justify-content:center" onclick="addNewAsset()">+ 添加资产项</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeEditModal()">取消</button>
+      <button class="btn-primary" onclick="saveFromModal()">保存并更新</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 类型配置（8类，与截图一致）──────────────────────────────
+const ASSET_TYPES = [
+  { id: 'stock',      icon: '📈', name: '股票',           color: '#34d399' },
+  { id: 'fund',       icon: '💹', name: '基金',           color: '#a78bfa' },
+  { id: 'cash',       icon: '💵', name: '现金',           color: '#38bdf8' },
+  { id: 'cash_bank',  icon: '🏦', name: '现金/银行存款',  color: '#4f8ef7' },
+  { id: 'yuebao',     icon: '🐙', name: '余额宝',         color: '#fbbf24' },
+  { id: 'gold',       icon: '🥇', name: '黄金',           color: '#f59e0b' },
+  { id: 'insurance',  icon: '🛡️', name: '保险',           color: '#6366f1' },
+  { id: 'bangnitou',  icon: '🤖', name: '帮你投',         color: '#f472b6' },
+];
+
+// 中文名 -> id 映射（用于 Excel 导入）
+const CHINESE_TYPE_MAP = {
+  '股票':'stock','基金':'fund','现金':'cash','银行存款':'cash_bank',
+  '现金/银行存款':'cash_bank','余额宝':'yuebao','黄金':'gold',
+  '保险':'insurance','帮你投':'bangnitou'
+};
+
+const STORAGE_KEY = 'pjm_asset_v2';
+const DEFAULT_ITEMS = [
+  { id:'d1', name:'现金/银行存款', type:'cash_bank',  amount:50000,  note:'家庭备用金' },
+  { id:'d2', name:'余额宝',        type:'yuebao',    amount:30000,  note:'日常零花' },
+  { id:'d3', name:'黄金',          type:'gold',      amount:20000,  note:'实物金/纸黄金' },
+  { id:'d4', name:'保险',          type:'insurance', amount:50000,  note:'储蓄型/年金险' },
+  { id:'d5', name:'帮你投',         type:'bangnitou', amount:36095,  note:'支付宝纯算法组合' },
+];
+
+function defaultData() {
+  return { updatedAt: null, items: DEFAULT_ITEMS.map(i=>({...i})) };
+}
+
+// ── 数据读写 ──────────────────────────────────────────────
+function loadData() {
+  try {
+    // 优先新键，兼容旧键
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) raw = localStorage.getItem('pjm_asset_data_v1');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return defaultData();
+}
+
+function saveData(data) {
+  data.updatedAt = new Date().toLocaleString('zh-CN');
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  render();
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── 格式化金额（整数）──────────────────────────────────────
+function fmt(v) {
+  v = Math.round(v||0);
+  if (v >= 100000000) return '¥ ' + (v/100000000).toFixed(1) + '亿';
+  if (v >= 10000) return '¥ ' + (v/10000).toFixed(0) + '万';
+  return '¥ ' + v.toLocaleString('zh-CN');
+}
+function fmtNum(v) {
+  return Math.round(v||0).toLocaleString('zh-CN');
+}
+
+// ── 渲染 ─────────────────────────────────────────────────
+let charts = {};
+
+function render() {
+  const data = loadData();
+  const items = data.items || [];
+
+  // 总资产
+  const total = items.reduce((s,i) => s + (i.amount||0), 0);
+  document.getElementById('totalAmount').textContent = fmt(total);
+  document.getElementById('updateDate').textContent = data.updatedAt || '--';
+
+  // 按类型汇总
+  const typeMap = {};
+  items.forEach(i => {
+    const t = i.type || 'cash';
+    typeMap[t] = (typeMap[t]||0) + (i.amount||0);
+  });
+
+  // Hero 类型卡片（只显示有值的类型）
+  const heroCards = document.getElementById('heroCards');
+  heroCards.innerHTML = ASSET_TYPES
+    .filter(t => (typeMap[t.id]||0) > 0)
+    .map(t => {
+      const val = typeMap[t.id]||0;
+      const pct = total > 0 ? ((val/total)*100).toFixed(1) : '0.0';
+      return `<div class="hero-card">
+        <div class="hero-card-icon">${t.icon}</div>
+        <div class="hero-card-name">${t.name}</div>
+        <div class="hero-card-val">${fmtNum(val)}</div>
+        <div class="hero-card-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+
+  // 资产明细卡片
+  const assetCards = document.getElementById('assetCards');
+  assetCards.innerHTML = ASSET_TYPES.map(t => {
+    const val = typeMap[t.id]||0;
+    const pct = total > 0 ? ((val/total)*100).toFixed(1) : '0.0';
+    const subItems = items.filter(i => i.type === t.id);
+    const note = subItems.length === 1 ? subItems[0].note : (subItems.length > 1 ? `含${subItems.length}项` : '');
+    return `<div class="asset-card" style="--c:${t.color}">
+      <div class="asset-card-icon">${t.icon}</div>
+      <div class="asset-card-name"><span class="color-dot" style="background:${t.color}"></span>${t.name}</div>
+      <div class="asset-card-val">${fmtNum(val)}</div>
+      ${note ? `<div class="asset-card-note">${note}</div>` : ''}
+      <div class="asset-card-pct" style="background:${t.color}22;color:${t.color}">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // 图表数据
+  const labels = ASSET_TYPES.map(t=>t.name);
+  const values = ASSET_TYPES.map(t=>typeMap[t.id]||0);
+  const colors = ASSET_TYPES.map(t=>t.color);
+
+  // 销毁旧图表
+  Object.values(charts).forEach(c=>c.destroy());
+  charts = {};
+
+  const chartDefaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color:'#8fa3bf', font:{size:11}, boxWidth:12, padding:8 } } }
+  };
+
+  charts.pie = new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth:0, hoverOffset:4 }] },
+    options: {
+      ...chartDefaults,
+      plugins: {
+        ...chartDefaults.plugins,
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.raw || 0;
+              const t = values.reduce((a,b)=>a+b,0);
+              const pct = t > 0 ? (v/t*100).toFixed(1) : '0.0';
+              return ` ${ctx.label}：${fmt(v)}（${pct}%）`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  charts.bar = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors.map(c=>c+'99'), borderRadius:6, borderSkipped:false }] },
+    options: {
+      ...chartDefaults,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.raw || 0;
+              const t = values.reduce((a,b)=>a+b,0);
+              const pct = t > 0 ? (v/t*100).toFixed(1) : '0.0';
+              return ` ${fmt(v)}（${pct}%）`;
+            }
+          }
+        },
+        legend: { display:false }
+      },
+      scales: {
+        x: { ticks:{color:'#566480',font:{size:10}}, grid:{display:false} },
+        y: { ticks:{color:'#566480',font:{size:10}, callback:v=>fmt(v)}, grid:{color:'#1a2236'} }
+      }
+    }
+  });
+}
+
+// ── Excel 上传 ─────────────────────────────────────────────
+document.getElementById('excelUpload').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type:'array', cellDates:true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+
+    const newItems = [];
+    for (let i = 1; i < json.length; i++) {
+      const row = json[i];
+      if (!row[0] && !row[1] && !row[2]) continue;
+      const name   = String(row[0]||'').trim();
+      const typeRaw = String(row[1]||'').trim();
+      const amount  = parseFloat(String(row[2]||'0').replace(/[^\d.-]/g,'')) || 0;
+      const note    = String(row[3]||'').trim();
+      if (!name && amount <= 0) continue;
+      const type = CHINESE_TYPE_MAP[typeRaw] || typeRaw || 'cash';
+      newItems.push({ id:'imp_'+i+'_'+Date.now(), name, type, amount, note });
+    }
+
+    if (newItems.length === 0) {
+      showToast('⚠️ 未识别到有效数据，请检查 Excel 格式');
+      return;
+    }
+
+    const data = loadData();
+    data.items = newItems;
+    saveData(data);
+    showToast(`✅ 成功导入 ${newItems.length} 条数据`);
+    e.target.value = '';
+  } catch(err) {
+    showToast('❌ 导入失败：' + err.message);
+    console.error(err);
+  }
+});
+
+// ── 导出 Excel（从编辑数据导出）────────────────────────────
+function exportExcel() {
+  const data = loadData();
+  const typeMap = {};
+  let total = 0;
+  data.items.forEach(item => {
+    if (!typeMap[item.type]) typeMap[item.type] = 0;
+    typeMap[item.type] += (item.amount || 0);
+    total += (item.amount || 0);
+  });
+
+  const ASSET_ORDER = ['cash','cash_bank','yuebao','gold','insurance','bangnitou','stock','fund'];
+  const ASSET_NAME = {};
+  ASSET_TYPES.forEach(t => { ASSET_NAME[t.id] = t.name; });
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+  const rows = [];
+  rows.push(['PJM 个人资产看板', '', '']);
+  rows.push([`数据更新时间：${timeStr}`, '', '']);
+  rows.push(['项目', '金额', '占比']);
+
+  ASSET_ORDER.forEach(id => {
+    const name = ASSET_NAME[id] || id;
+    const amt = typeMap[id] || 0;
+    if (amt > 0 || typeMap[id] !== undefined) {
+      const pct = total > 0 ? (amt / total) : 0;
+      rows.push([name, amt, pct]);
+    }
+  });
+
+  rows.push(['合计：', total, 1]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:22},{wch:15},{wch:12}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '资产数据');
+  XLSX.writeFile(wb, 'PJM_资产数据.xlsx');
+  showToast('📥 Excel 已导出');
+}
+
+// ── 编辑弹窗 ──────────────────────────────────────────────
+let modalItems = [];
+
+function openEditModal() {
+  modalItems = loadData().items.map(i=>({...i}));
+  renderModalList();
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('show');
+}
+
+function renderModalList() {
+  const el = document.getElementById('assetList');
+  const typeNameMap = {};
+  ASSET_TYPES.forEach(t => { typeNameMap[t.id] = t.name; });
+
+  el.innerHTML = modalItems.map((item, idx) => {
+    const cfg = ASSET_TYPES.find(t=>t.id===item.type) || {icon:'📦',name:item.type||'未知',color:'#888'};
+    return `<div class="asset-item">
+      <span class="asset-item-icon">${cfg.icon}</span>
+      <span class="asset-item-name">${item.name||'--'}</span>
+      <span class="asset-item-type">${typeNameMap[item.type]||item.type||'--'}</span>
+      <span class="asset-item-amount">¥${fmtNum(item.amount)}</span>
+      <span class="asset-item-btns">
+        <span class="asset-item-btn edit" onclick="editItem(${idx})">编辑</span>
+        <span class="asset-item-btn del" onclick="deleteItem(${idx})">删除</span>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function addNewAsset() {
+  modalItems.push({ id:'new_'+Date.now(), name:'', type:'cash', amount:0, note:'' });
+  renderModalList();
+  editItem(modalItems.length - 1);
+}
+
+function editItem(idx) {
+  const item = modalItems[idx];
+  const typeOptions = ASSET_TYPES.map(t =>
+    `<option value="${t.id}" ${t.id===item.type?'selected':''}>${t.icon} ${t.name}</option>`
+  ).join('');
+
+  const html = `
+    <div style="padding:14px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">名称</label>
+          <input class="form-input" id="ei_name" value="${item.name||''}" placeholder="如：招商银行股票">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">类型</label>
+          <select class="form-select" id="ei_type">${typeOptions}</select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">金额（元）</label>
+          <input class="form-input" id="ei_amount" type="number" value="${item.amount||0}" placeholder="0">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">备注</label>
+          <input class="form-input" id="ei_note" value="${item.note||''}" placeholder="选填">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" style="flex:1" onclick="renderModalList()">取消</button>
+        <button class="btn-primary" style="flex:1" onclick="saveItem(${idx})">确认</button>
+      </div>
+    </div>`;
+
+  const items = document.querySelectorAll('.asset-item');
+  items[idx].outerHTML = `<div class="asset-item" style="flex-direction:column;align-items:stretch">${html}</div>`;
+}
+
+function saveItem(idx) {
+  modalItems[idx].name   = document.getElementById('ei_name').value.trim();
+  modalItems[idx].type   = document.getElementById('ei_type').value;
+  modalItems[idx].amount = parseFloat(document.getElementById('ei_amount').value) || 0;
+  modalItems[idx].note   = document.getElementById('ei_note').value.trim();
+  renderModalList();
+  // 立刻更新页面
+  const data = loadData();
+  data.items = modalItems.filter(i => i.name && i.amount > 0);
+  saveData(data);
+  showToast('✅ 已更新');
+}
+
+function deleteItem(idx) {
+  modalItems.splice(idx, 1);
+  renderModalList();
+}
+
+function saveFromModal() {
+  const valid = modalItems.filter(i => i.name && i.amount > 0);
+  if (valid.length === 0) {
+    showToast('⚠️ 请至少保留一条有效数据');
+    return;
+  }
+  const data = loadData();
+  data.items = valid;
+  saveData(data);
+  closeEditModal();
+  showToast('✅ 数据已保存，页面已更新');
+}
+
+// ── 初始化 ────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
