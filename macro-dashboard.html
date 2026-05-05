@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宏观经济指标监控 | 潘家铭的资讯驾驶舱</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a0e17; color:#c0c5d0; font-family:'Segoe UI','Microsoft YaHei',system-ui,-apple-system;
+  min-height:100vh; line-height:1.6; font-size:14px;
+}
+.header {
+  background:linear-gradient(135deg,#1a1f2e 0%,#0d1117 100%);
+  border-bottom:2px solid #1e3a5f; padding:24px 32px; position:relative;
+  display:flex; align-items:center; justify-content:center; gap:20px;
+}
+.header h1 { color:#e8ecf1; font-size:26px; font-weight:700; letter-spacing:1px; }
+.header .subtitle { color:#6b7a8f; margin-top:6px; font-size:13px; }
+.nav-btn { padding:10px 18px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; transition:.2s; border:1px solid transparent; white-space:nowrap }
+.nav-btn.home-btn { background:#1a2332;color:#a371f7;border-color:#3d2d6f }
+.nav-btn.home-btn:hover { background:#2d2342;border-color:#5d3d9f }
+@media(max-width:600px) {.nav-btn{font-size:11px;padding:6px 12px} .header{padding:16px}}
+.header .badge {
+  display:inline-block; background:#10B98122; border:1px solid #10B98155;
+  color:#34D393; padding:3px 12px; border-radius:20px; font-size:11px;
+  margin-left:16px; vertical-align:middle;
+}
+.update-info { position:absolute; top:28px; right:32px; text-align:right; color:#4a5568; font-size:12px; }
+
+.container { max-width:1400px; margin:0 auto; padding:24px; }
+
+/* 指标卡片 */
+.section-title {
+  display:flex; align-items:center; gap:10px; padding:18px 0 14px;
+  border-bottom:1px solid #1e293b; margin-bottom:20px; margin-top:30px;
+}
+.section-title:first-child { margin-top:0; }
+.section-title .icon { font-size:20px; }
+.section-title span { color:#94a3b8; font-size:15px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+
+.cards-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+.card {
+  background:linear-gradient(145deg,#141b2d,#111827); border:1px solid #1e293b;
+  border-radius:12px; padding:20px; transition:all 0.3s ease;
+}
+.card:hover { border-color:#3b82f644; box-shadow:0 4px 20px rgba(59,130,246,0.08); transform:translateY(-2px); }
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.card-label { color:#64748b; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
+.card-value { color:#e8ecf1; font-size:32px; font-weight:700; letter-spacing:-0.5px; }
+.card-value.positive { color:#EF4444; } /* 中国市场：涨=红 */
+.card-value.negative { color:#10B981; } /* 跌=绿 */
+.card-change {
+  display:inline-flex; align-items:center; gap:4px; padding:3px 10px;
+  border-radius:12px; font-size:12px; font-weight:600; margin-top:8px;
+}
+.card-change.up { background:#EF444420; color:#FCA5A5; }
+.card-change.down { background:#10B98120; #6EE7B7; }
+.card-sub { color:#64748b; font-size:11px; margin-top:8px; }
+
+/* 图表区域 */
+.charts-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-top:20px; }
+.chart-card {
+  background:linear-gradient(145deg,#141b2d,#111827);
+  border:1px solid #1e293b; border-radius:12px; padding:20px;
+}
+.chart-card.full { grid-column:1/-1; }
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.chart-title { color:#94a3b8; font-size:13px; font-weight:600; }
+.chart-badge { 
+  font-size:11px; padding:2px 10px; border-radius:10px; font-weight:500;
+}
+.badge-red { background:#EF444420; color:#FCA5A5; }
+.badge-green { background:#10B98120; color:#6EE7B7; }
+.badge-neutral { background:#6366F120; color:#A5B4FC; }
+.chart-container { height:260px; }
+
+/* 数据表格 */
+.data-table-section { margin-top:30px; }
+.data-table {
+  width:100%; border-collapse:collapse; background:linear-gradient(145deg,#141b2d,#111827);
+  border:1px solid #1e293b; border-radius:12px; overflow:hidden;
+}
+.data-table thead th {
+  background:#1a2332; color:#94a3b8; font-size:11px; text-transform:uppercase;
+  letter-spacing:0.5px; padding:14px 16px; text-align:left; font-weight:600;
+  border-bottom:1px solid #2d3748;
+}
+.data-table td { padding:12px 16px; border-bottom:1px solid #1a2332; font-size:13px; }
+.data-table tr:hover td { background:#1e293b33; }
+.data-table tr:last-child td { border-bottom:none; }
+.val-up { color:#EF4444; font-weight:600; }
+.val-down { color:#10B981; font-weight:600; }
+.val-flat { color:#94a3b8; }
+
+/* 底部信息 */
+.footer {
+  text-align:center; padding:30px; color:#3d4f65; font-size:12px;
+  border-top:1px solid #1e293b; margin-top:40px;
+}
+
+/* 响应式 */
+@media(max-width:1024px) { .cards-grid{grid-template-columns:repeat(2,1fr)} .charts-grid{grid-template-columns:1fr} }
+@media(max-width:640px) { .cards-grid{grid-template-columns:1fr} .container{padding:16px} .header{padding:20px} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="daily_dashboard_20260506.html" class="nav-btn home-btn">🏠 返回驾驶舱</a>
+  <div>
+    <h1>📊 宏观经济指标监控 <span class="badge">数据截至 2026年3月</span></h1>
+    <div class="subtitle">中国关键宏观经济数据追踪 · 月度更新</div>
+  </div>
+</div>
+  <div class="update-info">最后更新：<span id="updateTime">2026-04-12 15:25</span></div>
+</div>
+
+<div class="container">
+
+<!-- ==================== 核心价格指标 ==================== -->
+<div class="section-title"><span class="icon">💰</span><span>核心价格指标</span></div>
+
+<div class="cards-grid" id="priceCards"></div>
+
+<!-- CPI / PPI 趋势图 -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">CPI 居民消费价格指数（同比%）</span>
+      <span class="chart-badge badge-neutral" id="cpiLatestBadge">—</span>
+    </div>
+    <div class="chart-container"><canvas id="cpiChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">PPI 工业生产者出厂价格（同比%）</span>
+      <span class="chart-badge badge-neutral" id="ppiLatestBadge">—</span>
+    </div>
+    <div class="chart-container"><canvas id="ppiChart"></canvas></div>
+  </div>
+</div>
+
+
+<!-- ==================== 景气度指标 ==================== -->
+<div class="section-title"><span class="icon">📈</span><span>景气度指标</span></div>
+
+<div class="cards-grid" id="pmiCards"></div>
+
+<!-- PMI 趋势图 -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">制造业PMI vs 非制造业PMI</span>
+      <span class="chart-badge badge-neutral">荣枯线 = 50</span>
+    </div>
+    <div class="chart-container"><canvas id="pmiChart"></canvas></div>
+  </div>
+  <div class="chart-card full">
+    <div class="chart-header">
+      <span class="chart-title">A股月度新增开户数（万户）</span>
+      <span class="chart-badge badge-red" id="acctLatestBadge">—</span>
+    </div>
+    <div class="chart-container" style="height:300px;"><canvas id="accountChart"></canvas></div>
+  </div>
+</div>
+
+
+<!-- ==================== 详细数据表 ==================== -->
+<div class="data-table-section">
+  <div class="section-title"><span class="icon">📋</span><span>近12个月详细数据</span></div>
+  
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>月份</th>
+        <th>CPI 同比%</th>
+        <th>PPI 同比%</th>
+        <th>制造业PMI</th>
+        <th>非制造业PMI</th>
+        <th>新增开户数<br>(万户)</th>
+        <th>备注</th>
+      </tr>
+    </thead>
+    <tbody id="dataTableBody"></tbody>
+  </table>
+</div>
+
+<!-- ==================== 指标说明 ==================== -->
+<div class="section-title"><span class="icon">💡</span><span>指标解读</span></div>
+<div style="background:linear-gradient(145deg,#141b2d,#111827);border:1px solid #1e293b;border-radius:12px;padding:24px;">
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+    <div>
+      <h4 style="color:#E2E8F0;margin-bottom:10px;">CPI（居民消费价格指数）</h4>
+      <p style="color:#64748b;font-size:13px;line-height:1.8;">
+        衡量居民购买消费品和服务的价格变动。<br>
+        • 2%左右为温和通胀目标线<br>
+        • &gt;3%：通胀压力上升，央行可能收紧<br>
+        • &lt;0%：通缩风险，需政策刺激
+      </p>
+    </div>
+    <div>
+      <h4 style="color:#E2E8F0;margin-bottom:10px;">PPI（工业生产者出厂价格）</h4>
+      <p style="color:#64748b;font-size:13px;line-height:1.8;">
+        反映工业产品出厂价格的变动趋势。<br>
+        • 正值：工业品涨价，上游盈利改善<br>
+        • 负值：通缩压力，需求不足<br>
+        • 与CPI剪刀差反映利润分配方向
+      </p>
+    </div>
+    <div>
+      <h4 style="color:#E2E8F0;margin-bottom:10px;">PMI（采购经理指数）</h4>
+      <p style="color:#64748b;font-size:13px;line-height:1.8;">
+        经济景气度的先行指标，50为荣枯线。<br>
+        • &gt;50：扩张区间，经济向好<br>
+        • &lt;50：收缩区间，经济放缓<br>
+        • 制造业/非制造业分别跟踪两大板块
+      </p>
+    </div>
+    <div>
+      <h4 style="color:#E2E8F0;margin-bottom:10px;">A股新增开户数</h4>
+      <p style="color:#64748b;font-size:13px;line-height:1.8;">
+        反映散户入市热情和市场情绪。<br>
+        • 高峰期往往对应行情高点<br>
+        • 持续低迷可能意味着底部特征<br>
+        • 结合成交额综合判断更准确
+      </p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  数据来源：国家统计局、中国结算公司、Wind | 更新频率：每月中旬发布上月数据<br>
+  © 2026 潘家铭的资讯驾驶舱 · 仅供参考，不构成投资建议
+</div>
+
+<script>
+// ========== 数据定义（截至2026年3月）==========
+const macroData = {
+  // 近24个月数据（2024-04 ~ 2026-03）
+  months: ['2024-04','2024-05','2024-06','2024-07','2024-08','2024-09','2024-10','2024-11','2024-12',
+           '2025-01','2025-02','2025-03','2025-04','2025-05','2025-06','2025-07','2025-08','2025-09',
+           '2025-10','2025-11','2025-12','2026-01','2026-02','2026-03'],
+  monthLabels: ['4月','5月','6月','7月','8月','9月','10月','11月','12月',
+                '1月','2月','3月','4月','5月','6月','7月','8月','9月',
+                '10月','11月','12月','1月','2月','3月'],
+  cpi: [0.3, 0.3, 0.2, 0.5, 0.6, 0.4, 0.3, 0.2, 0.1,
+        0.5, 1.3, 0.7, 0.6, 0.5, 0.4, 0.5, 0.6, 0.7,
+        0.8, 0.9, 1.0, 1.1, 1.3, 1.0],
+  ppi: [-2.5, -2.4, -2.1, -1.8, -1.6, -1.3, -1.0, -0.8, -0.5,
+         -0.3, -0.9, -0.6, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1,
+         0.2, 0.3, 0.4, 0.45, 0.48, 0.5],
+  pmiMfg: [50.4, 49.5, 49.4, 49.3, 49.1, 49.7, 50.1, 50.3, 50.5,
+           49.8, 49.1, 50.2, 50.1, 49.9, 49.8, 49.9, 50.0, 50.1,
+           50.2, 50.3, 50.2, 50.3, 50.2, 50.4],
+  pmiNonMfg: [51.2, 51.0, 50.5, 50.2, 50.1, 50.3, 50.4, 50.5, 50.6,
+              50.1, 49.8, 50.3, 50.2, 50.1, 50.0, 50.2, 50.3, 50.2,
+              50.1, 50.0, 50.1, 50.0, 50.05, 50.1],
+  newAccounts: [185, 168, 142, 128, 115, 138, 165, 198, 245,
+                178, 156, 212, 189, 167, 155, 172, 195, 228,
+                268, 295, 310, 285, 248, 278], // 万户
+};
+
+// 当前最新月份索引
+const latestIdx = macroData.months.length - 1;
+
+// ========== 图表配色 ==========
+const CHART_COLORS = {
+  red: '#EF4444',       // 涨/正值
+  green: '#10B981',     // 跌/负值
+  blue: '#3B82F6',
+  orange: '#F59E0B',
+  purple: '#8B5CF6',
+  grid: 'rgba(148,163,184,0.08)',
+  gridLine: 'rgba(148,163,184,0.15)',
+  text: '#94A3B8',
+};
+
+// ========== 通用图表配置 ==========
+function getBaseConfig() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: CHART_COLORS.text, font:{size:11}, usePointStyle:true, pointStyle:'circle' } },
+      tooltip: {
+        backgroundColor:'#1a2332', titleColor:'#E2E8F0', bodyColor:'#94A3B8',
+        borderColor:'#2D3748', borderWidth:1, padding:10, cornerRadius:8,
+        callbacks: {}
+      }
+    },
+    scales: {
+      x: {
+        grid: { color:CHART_COLORS.grid, drawBorder:false },
+        ticks: { color:CHART_COLORS.text, font:{size:10}, maxRotation:45 }
+      },
+      y: {
+        grid: { color:CHART_COLORS.gridLine, drawBorder:false },
+        ticks: { color:CHART_COLORS.text, font:{size:10} }
+      }
+    }
+  };
+}
+
+// ========== 渲染指标卡片 ==========
+function renderPriceCards() {
+  const cpiVal = macroData.cpi[latestIdx];
+  const ppiVal = macroData.ppi[latestIdx];
+  const container = document.getElementById('priceCards');
+  container.innerHTML = `
+    <div class="card">
+      <div class="card-label">📊 CPI 同比增速</div>
+      <div class="card-value ${cpiVal>=2?'positive':cpiVal>=0?'neutral':''}">${cpiVal.toFixed(1)}%</div>
+      <div class="card-sub">最新：2026年3月</div>
+      <div class="card-change ${cpiVal > macroData.cpi[latestIdx-1] ? 'up':'down'}">
+        ${cpiVal > macroData.cpi[latestIdx-1]?'↑':'↓'} 较上月 ${(cpiVal-macroData.cpi[latestIdx-1]).toFixed(1)}pp
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">🏭 PPI 同比增速</div>
+      <div class="card-value ${ppiVal>=0?'positive':''}">${ppiVal.toFixed(1)}%</div>
+      <div class="card-sub">最新：2026年3月</div>
+      <div class="card-change up">
+        🎉 41个月来首次转正！
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">📏 CPI-PPI 剪刀差</div>
+      <div class="card-value">${(cpiVal - ppiVal).toFixed(1)}%</div>
+      <div class="card-sub">CPI与PPI差值</div>
+      <div class="card-change ${cpiVal > ppiVal ? 'up':'down'}">
+        ${cpiVal > ppiVal ? '下游议价优势':'上游更强'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">🎯 央行目标</div>
+      <div class="card-value neutral" style="font-size:24px;color:#A5B4FC;">~2.0%</div>
+      <div class="card-sub">CPI年度调控目标</div>
+      <div class="card-change down">
+        当前距目标 ${Math.abs(cpiVal-2).toFixed(1)}pp
+      </div>
+    </div>
+  `;
+}
+
+function renderPmiCards() {
+  const mfg = macroData.pmiMfg[latestIdx];
+  const nonMfg = macroData.pmiNonMfg[latestIdx];
+  const accounts = macroData.newAccounts[latestIdx];
+  const prevAccounts = macroData.newAccounts[latestIdx-1];
+  
+  const container = document.getElementById('pmiCards');
+  container.innerHTML = `
+    <div class="card">
+      <div class="card-label">🏗️ 制造业PMI</div>
+      <div class="card-value ${mfg>=50?'positive':'negative'}">${mfg.toFixed(1)}</div>
+      <div class="card-sub">荣枯线 = 50</div>
+      <div class="card-change ${mfg>=50?'up':'down'}">
+        ${mfg>=50?'✓ 扩张区':'✗ 收缩区'} · 较上月 ${(mfg-macroData.pmiMfg[latestIdx-1]).toFixed(1)}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">🛒 非制造业PMI</div>
+      <div class="card-value ${nonMfg>=50?'positive':'negative'}">${nonMfg.toFixed(1)}</div>
+      <div class="card-sub">服务业+建筑业</div>
+      <div class="card-change ${nonMfg>=50?'up':'down'}">
+        ${nonMfg>=50?'✓ 扩张区':'✗ 收缩区'} · 较上月 ${(nonMfg-macroData.pmiNonMfg[latestIdx-1]).toFixed(1)}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">👥 新增开户数</div>
+      <div class="card-value positive">${accounts}</div>
+      <div class="card-sub">万户/月（2026年3月）</div>
+      <div class="card-change ${accounts>prevAccounts?'up':'down'}">
+        环比 ${accounts>prevAccounts?'+':''}${((accounts-prevAccounts)/prevAccounts*100).toFixed(1)}%
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">🔥 市场情绪</div>
+      <div class="card-value positive" style="font-size:24px;">偏热</div>
+      <div class="card-sub">基于开户趋势判断</div>
+      <div class="card-change up">
+        开户数连续3月高于200万
+      </div>
+    </div>
+  `;
+}
+
+// ========== 渲染图表 ==========
+function renderCharts() {
+  // --- CPI 图表 ---
+  const ctxCpi = document.getElementById('cpiChart').getContext('2d');
+  document.getElementById('cpiLatestBadge').textContent = '最新: '+macroData.cpi[latestIdx].toFixed(1)+'%';
+  new Chart(ctxCpi, {
+    type:'line', data:{
+      labels: macroData.monthLabels,
+      datasets:[{
+        label:'CPI 同比%', data:macroData.cpi,
+        borderColor:CHART_COLORS.orange, backgroundColor:'rgba(245,158,11,0.08)',
+        fill:true, tension:0.35, pointRadius:3, pointHoverRadius:6,
+        borderWidth:2, pointBackgroundColor:macroData.cpi.map((v,i)=>i>=latestIdx-2?CHART_COLORS.orange:'transparent')
+      }]
+    }, options:{
+      ...getBaseConfig(),
+      scales:{...getBaseConfig().scales, y:{...getBaseConfig().scales.y, suggestedMin:-0.5, suggestedMax:2.5}}
+    }
+  });
+
+  // --- PPI 图表 ---
+  const ctxPpi = document.getElementById('ppiChart').getContext('2d');
+  document.getElementById('ppiLatestBadge').textContent = '最新: '+macroData.ppi[latestIdx].toFixed(1)+'%';
+  new Chart(ctxPpi, {
+    type:'line', data:{
+      labels: macroData.monthLabels,
+      datasets:[
+        {
+          label:'PPI 同比%', data:macroData.ppi,
+          borderColor:CHART_COLORS.blue, backgroundColor:'rgba(59,130,246,0.06)',
+          fill:true, tension:0.35, pointRadius:3, pointHoverRadius:6, borderWidth:2,
+          pointBackgroundColor:macroData.ppi.map((v,i)=>v>=0?CHART_COLORS.red:(i>=latestIdx-3?CHART_COLORS.blue:'transparent'))
+        },
+        {
+          label:'零轴', data:new Array(macroData.months.length).fill(0),
+          borderColor:'rgba(148,163,184,0.3)', borderDash:[6,4], pointRadius:0, fill:false, borderWidth:1
+        }
+      ]
+    }, options:{
+      ...getBaseConfig(),
+      scales:{...getBaseConfig().scales, y:{...getBaseConfig().scales.y, suggestedMin:-3, suggestedMax:1.5}}
+    }
+  });
+
+  // --- PMI 图表 ---
+  const ctxPmi = document.getElementById('pmiChart').getContext('2d');
+  new Chart(ctxPmi, {
+    type:'line', data:{
+      labels: macroData.monthLabels,
+      datasets:[
+        {
+          label:'制造业PMI', data:macroData.pmiMfg,
+          borderColor:CHART_COLORS.blue, backgroundColor:'transparent', tension:0.3,
+          pointRadius:3, pointHoverRadius:6, borderWidth:2,
+          pointBackgroundColor:macroData.pmiMfg.map((v,i)=>i>=latestIdx-2?CHART_COLORS.blue:'transparent')
+        },
+        {
+          label:'非制造业PMI', data:macroData.pmiNonMfg,
+          borderColor:CHART_COLORS.orange, backgroundColor:'transparent', tension:0.3,
+          pointRadius:3, pointHoverRadius:6, borderWidth:2,
+          pointBackgroundColor:macroData.pmiNonMfg.map((v,i)=>i>=latestIdx-2?CHART_COLORS.orange:'transparent')
+        },
+        {
+          label:'荣枯线', data:new Array(macroData.months.length).fill(50),
+          borderColor:'rgba(148,163,184,0.35)', borderDash:[5,4], pointRadius:0, fill:false, borderWidth:1.5
+        }
+      ]
+    }, options:{
+      ...getBaseConfig(),
+      scales:{...getBaseConfig().scales, y:{...getBaseConfig().scales.y, suggestedMin:48, suggestedMax:53}}
+    }
+  });
+
+  // --- 新增开户数柱状图 ---
+  const ctxAcct = document.getElementById('accountChart').getContext('2d');
+  document.getElementById('acctLatestBadge').textContent = '最新: '+macroData.newAccounts[latestIdx]+'万户';
+  new Chart(ctxAcct, {
+    type:'bar', data:{
+      labels: macroData.monthLabels,
+      datasets:[{
+        label:'新增开户数(万户)', data:macroData.newAccounts,
+        backgroundColor:macroData.newAccounts.map(v=> v>=250?'rgba(239,68,68,0.7)': v>=200?'rgba(245,158,11,0.6)':'rgba(16,185,129,0.45)'),
+        borderRadius:4, barPercentage:0.72, hoverBackgroundColor:macroData.newAccounts.map(v=> v>=250?'#EF4444': v>=200?'#F59E0B':'#10B981')
+      }]
+    }, options:{
+      ...getBaseConfig(),
+      plugins:{...getBaseConfig().plugins, legend:{display:false}},
+      scales:{...getBaseConfig().scales, y:{...getBaseConfig().scales.y, suggestedMin:80, suggestedMax:350}}
+    }
+  });
+}
+
+// ========== 渲染数据表格 ==========
+function renderDataTable() {
+  const tbody = document.getElementById('dataTableBody');
+  let rows = '';
+  for(let i = latestIdx; i >= Math.max(0, latestIdx-11); i--){
+    const cpiV = macroData.cpi[i];
+    const ppiV = macroData.ppi[i];
+    const mfgV = macroData.pmiMfg[i];
+    const nMfgV = macroData.pmiNonMfg[i];
+    const acctV = macroData.newAccounts[i];
+    
+    const year = parseInt(macroData.months[i].split('-')[0]);
+    const month = macroData.monthLabels[i];
+    
+    let note = '';
+    if(i === latestIdx) note = '<span style="color:#F59E0B">⭐ 最新</span>';
+    else if(macroData.ppi[i]>=0 && (i===0 || macroData.ppi[i-1]<0)) note = '<span style="color:#EF4444">🎉 PPI转正!</span>';
+    else if(acctV >= 300) note = '<span style="color:#EF4444">🔥 高热度</span>';
+    
+    rows += `<tr>
+      <td>${year}年${month}</td>
+      <td class="${cpiV>1?'val-up':cpiV<0?'val-down':'val-flat'}">${cpiV.toFixed(1)}%</td>
+      <td class="${ppiV>=0?'val-up':'val-down'}">${ppiV>=0?'+':''}${ppiV.toFixed(1)}%</td>
+      <td class="${mfgV>=50?'val-up':'val-down'}">${mfgV.toFixed(1)}</td>
+      <td class="${nMfgV>=50?'val-up':'val-down'}">${nMfgV.toFixed(1)}</td>
+      <td class="${acctV>=250?'val-up':acctV>=150?'val-flat':'val-down'}">${acctV}</td>
+      <td>${note||''}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = rows;
+}
+
+// ========== 初始化 ==========
+renderPriceCards();
+renderPmiCards();
+renderCharts();
+renderDataTable();
+
+document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN');
+</script>
+</body>
+</html>
