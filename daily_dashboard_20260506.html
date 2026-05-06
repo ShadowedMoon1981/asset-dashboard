@@ -20,6 +20,7 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 @media(max-width:600px){.nav-btn{font-size:11px;padding:6px 10px}}
 .notice{background:#0d2d1d;border:1px solid #238636;border-radius:8px;padding:10px 16px;margin-top:12px;font-size:14px;color:#3fb950;text-align:center}
 .alert-notice{background:#2d1f0f;border:1px solid #9e6a03;border-radius:8px;padding:10px 16px;margin-top:10px;font-size:14px;color:#f0b429;text-align:center}
+.holiday-notice{background:#1a1f2e;border:1px solid #30363d;border-radius:8px;padding:10px 16px;margin-top:12px;font-size:14px;color:#8b949e;text-align:center}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 .metric-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:transform .2s}
 .metric-card:hover{transform:translateY(-2px)}
@@ -31,8 +32,8 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 .metric-label{font-size:12px;color:#8b949e;margin-bottom:6px}
 .metric-value{font-size:22px;font-weight:700;margin-bottom:4px}
 .metric-change{font-size:14px;font-weight:600}
-.change-up{color:#e53e3e!important}
-.change-down{color:#38a169!important}
+.change-up{color:#e53e3e !important}
+.change-down{color:#38a169 !important}
 .up .metric-change{color:#e53e3e}
 .down .metric-change{color:#38a169}
 .neutral .metric-change{color:#58a6ff}
@@ -62,11 +63,11 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 .side-card h3{font-size:14px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #21262d}
 .side-list{list-style:none}
 .side-list li{padding:6px 0;font-size:13px;color:#8b949e;line-height:1.5;display:flex;gap:8px}
-.side-list li::before{content:'•';color:#388bfd;flex-shrink:0}
-.risk-list li::before{content:'⚠'}
+.side-list li::before{content:'\2022';color:#388bfd;flex-shrink:0}
+.risk-list li::before{content:'\26A0'}
 .risk-list li{color:#f0b429}
 .risk-green li{color:#3fb950!important}
-.risk-green li::before{content:'✅'}
+.risk-green li::before{content:'\2705'}
 .macro-section{margin-top:24px;background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px}
 .macro-section h2{font-size:16px;font-weight:600;color:#e6edf3;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #21262d}
 .charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
@@ -86,9 +87,9 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
   <a href="macro-dashboard.html" class="nav-btn macro-btn">📊 宏观指标</a>
   <div>
     <h1>📊 潘家铭的资讯驾驶舱 V1.0</h1>
-    <div class="subtitle">2026年5月6日 · 周三 · A股/港股交易日</div>
-    <div class="notice">📌 劳动节假期结束，A股/港股今日恢复交易！节前4月30日沪指收4112点，深成指微跌0.09%</div>
-    <div class="alert-notice">🌐 五一期间中东局势升级，油价高位震荡；美股本周面临多重风险事件考验</div>
+    <div class="subtitle">2026年5月6日 · 周三 · 节后首日恢复交易</div>
+    <div class="notice">🚀 节后开门红！创业板指+2.75%续创近11年新高，科创50暴涨+5.47%，全市场成交3.23万亿创年内第六</div>
+    <div class="alert-notice">🌐 存储芯片/算力产业链全线爆发！海光信息20cm涨停创新高；油气股跟随国际油价调整</div>
   </div>
 </div>
 
@@ -96,51 +97,51 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 <div class="metrics">
 <div class="metric-card up">
 <div class="metric-label">上证指数</div>
-<div class="metric-value">4,112.16</div>
-<div class="metric-change">▲ +0.11%</div>
-<div class="metric-note">收盘（04-30）· 节前站稳4100点</div>
+<div class="metric-value">4,160.17</div>
+<div class="metric-change">▲ +1.17%</div>
+<div class="metric-note">收盘（05-06）· 成交额1.47万亿</div>
 </div>
-<div class="metric-card down">
+<div class="metric-card up">
 <div class="metric-label">深证成指</div>
-<div class="metric-value">15,107.55</div>
-<div class="metric-change">▼ -0.09%</div>
-<div class="metric-note">收盘（04-30）· 节前小幅回调</div>
+<div class="metric-value">15,459.62</div>
+<div class="metric-change">▲ +2.33%</div>
+<div class="metric-note">收盘（05-06）· 成交额1.76万亿</div>
 </div>
-<div class="metric-card down">
+<div class="metric-card up">
 <div class="metric-label">创业板指</div>
-<div class="metric-value">3,677.15</div>
-<div class="metric-change">▼ -0.27%</div>
-<div class="metric-note">收盘（04-30）· 节前小幅调整</div>
+<div class="metric-value">3,778.16</div>
+<div class="metric-change">▲ +2.75%</div>
+<div class="metric-note">收盘（05-06）· 续创近11年新高</div>
 </div>
-<div class="metric-card down">
+<div class="metric-card up">
 <div class="metric-label">恒生指数</div>
-<div class="metric-value">25,898.61</div>
-<div class="metric-change change-down">▼ -0.76%</div>
-<div class="metric-note">收盘（05-05）· 港股节后首日承压</div>
+<div class="metric-value">26,213.78</div>
+<div class="metric-change">▲ +1.22%</div>
+<div class="metric-note">收盘（05-06）· 站稳26000点</div>
 </div>
-<div class="metric-card down">
+<div class="metric-card up">
 <div class="metric-label">恒生科技</div>
-<div class="metric-value">4,929.68</div>
-<div class="metric-change change-down">▼ -0.94%</div>
-<div class="metric-note">收盘（05-05）· 科技股承压</div>
+<div class="metric-value">4,969.20</div>
+<div class="metric-change">▲ +0.80%</div>
+<div class="metric-note">收盘（05-06）· 反弹动能延续</div>
 </div>
-<div class="metric-card down">
+<div class="metric-card up">
 <div class="metric-label">WTI原油</div>
-<div class="metric-value">$99.73 <span style="font-size:14px;color:#8b949e">/桶</span></div>
-<div class="metric-change change-down">▼ -2.48%</div>
-<div class="metric-note">美元/桶 · 05-05收盘（中东紧张缓和）</div>
+<div class="metric-value">$95.91 <span style="font-size:14px;color:#8b949e">/桶</span></div>
+<div class="metric-change change-up">▲ +0.87%</div>
+<div class="metric-note">美元/桶 · 05-06收盘（中东局势支撑）</div>
 </div>
 <div class="metric-card neutral">
 <div class="metric-label">伦敦金现</div>
-<div class="metric-value">$4,548 <span style="font-size:14px;color:#8b949e">/盎司</span></div>
-<div class="metric-change change-down">▼ 高位震荡</div>
-<div class="metric-note">美元/盎司 · 05-05（避险需求支撑）</div>
+<div class="metric-value">$4,696.81 <span style="font-size:14px;color:#8b949e">/盎司</span></div>
+<div class="metric-change change-up">▲ +0.12%</div>
+<div class="metric-note">美元/盎司 · 05-07早盘（高位震荡）</div>
 </div>
-<div class="metric-card neutral">
+<div class="metric-card up">
 <div class="metric-label">LME铜</div>
-<div class="metric-value">$13,500 <span style="font-size:14px;color:#8b949e">/吨</span></div>
-<div class="metric-change change-up">— 参考价</div>
-<div class="metric-note">美元/吨 · 节前价格（等待更新）</div>
+<div class="metric-value">~$13,500 <span style="font-size:14px;color:#8b949e">/吨</span></div>
+<div class="metric-change change-up">▲ 估算</div>
+<div class="metric-note">美元/吨 · 05-06（铜概念股爆发）</div>
 </div>
 </div>
 
@@ -149,57 +150,57 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 <div class="section-title">📰 今日核心要闻</div>
 
 <div class="news-item">
-<div class="news-meta"><span class="tag macro">宏观</span><span class="tag time">05-06</span></div>
-<div class="news-title">五一假期消费数据亮眼：全国出游3.14亿人次同比+6.4%，旅游收入创新高</div>
-<div class="news-source">来源：文化和旅游部 · 新华社</div>
+<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">05-06</span></div>
+<div class="news-title"><a href="https://gu.qq.com/resources/shy/news/detail-v2/index.html?t=1#/index?_tentrees_trans=0&id=SN20260506150635a49c6ae2" target="_blank">A股收评：创业板指放量涨2.75%续创近11年新高，全市场成交额放大至3.23万亿元</a></div>
+<div class="news-source">来源：财经网 · 新浪财经</div>
 </div>
 
 <div class="news-item">
-<div class="news-meta"><span class="tag policy">政策</span><span class="tag time">05-06</span></div>
-<div class="news-title">节后A股开盘前瞻：假期期间港股先跌后涨，原油大跌2.5%，黄金维持高位</div>
-<div class="news-source">来源：财联社 · 券商中国</div>
+<div class="news-meta"><span class="tag tech">科技</span><span class="tag time">05-06</span></div>
+<div class="news-title"><a href="https://gu.qq.com/resources/shy/news/detail-v2/index.html?t=1#/index?_tentrees_trans=0&id=SN20260506152729a6f34010" target="_blank">存储芯片产业链全线爆发！海光信息20cm涨停创新高，江波龙/兆易创新等10余股涨停</a></div>
+<div class="news-source">来源：21世纪经济报道 · 新浪财经</div>
+</div>
+
+<div class="news-item">
+<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">05-06</span></div>
+<div class="news-title">科创50指数单日暴涨+5.47%逼近历史高位！算力租赁、PET铜箔、商业航天多板块联袂拉升</div>
+<div class="news-source">来源：光大证券微资讯 · 财联社</div>
+</div>
+
+<div class="news-item">
+<div class="news-meta"><span class="tag commodity">商品</span><span class="tag time">05-06</span></div>
+<div class="news-title">国际金价反弹，贵金属板块午后震荡走高，晓程科技、四川黄金、赤峰黄金领涨</div>
+<div class="news-source">来源：财经网 · 21世纪经济报道</div>
+</div>
+
+<div class="news-item">
+<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">05-06</span></div>
+<div class="news-title">A股公司2025年报&2026一季报披露完毕：一季度净利润同比+7.6%加速，全年分红2.55万亿创历史新高</div>
+<div class="news-source">来源：21世纪经济报道 · 中证报</div>
+</div>
+
+<div class="news-item">
+<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">05-06</span></div>
+<div class="news-title">白酒板块逆势下跌，五粮液跌近5%！油气股集体调整，中曼石油、中国海油领跌</div>
+<div class="news-source">来源：财经网 · 21世纪经济报道</div>
+</div>
+
+<div class="news-item">
+<div class="news-meta"><span class="tag macro">宏观</span><span class="tag time">05-06</span></div>
+<div class="news-title"><a href="http://gu.qq.com/resources/shy/news/detail-v2/index.html#/?id=nesSN20260507062533a49eeef1&s=b" target="_blank">央行5月6日开展3000亿元3个月期买断式逆回购，公开市场净回笼7669亿元</a></div>
+<div class="news-source">来源：财联社 · 中证报</div>
 </div>
 
 <div class="news-item">
 <div class="news-meta"><span class="tag hk">港股</span><span class="tag time">05-05</span></div>
-<div class="news-title">港股节后恢复交易首日：恒指跌0.76%，科技指数跌0.94%，能源股受油价拖累</div>
-<div class="news-source">来源：财联社 · 东方财富</div>
+<div class="news-title">恒生指数节后首日收涨+1.22%，金融股领涨；港股ADR隔夜表现稳健</div>
+<div class="news-source">来源：NeoData · 新浪财经</div>
 </div>
 
 <div class="news-item">
-<div class="news-meta"><span class="tag commodity">商品</span><span class="tag time">05-05</span></div>
-<div class="news-title">WTI原油跌至$99.73/桶，跌幅2.48%！中东局势短期缓和，但机构仍看多至$110</div>
-<div class="news-source">来源：NeoData · NYMEX</div>
-</div>
-
-<div class="news-item">
-<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">04-30</span></div>
-<div class="news-title">节前A股平稳收官：沪指守住4100点，创业板指节前小幅回调0.27%</div>
-<div class="news-source">来源：新浪财经 · 东方财富</div>
-</div>
-
-<div class="news-item">
-<div class="news-meta"><span class="tag macro">宏观</span><span class="tag time">05-05</span></div>
-<div class="news-title">美联储本周维持利率不变概率99%，鲍威尔记者会备受关注，市场等待降息信号</div>
-<div class="news-source">来源：CME"美联储观察" · 财联社</div>
-</div>
-
-<div class="news-item">
-<div class="news-meta"><span class="tag tech">科技</span><span class="tag time">05-05</span></div>
-<div class="news-title">美股本周迎"超级风暴"：鲍威尔记者会+美国非农数据+伯克希尔股东大会多重事件叠加</div>
-<div class="news-source">来源：华尔街见闻 · 新浪财经</div>
-</div>
-
-<div class="news-item">
-<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">04-30</span></div>
-<div class="news-title">A股年度分红近2.4万亿创历史新高！高股息资产持续吸引长线资金配置</div>
-<div class="news-source">来源：财联社 · 上证报</div>
-</div>
-
-<div class="news-item">
-<div class="news-meta"><span class="tag hk">港股</span><span class="tag time">04-29</span></div>
-<div class="news-title">港交所Q1净利润+27%创历史新高！中国平安Q1营运利润+7.6%大超预期</div>
-<div class="news-source">来源：每经网 · 港交所公告</div>
+<div class="news-meta"><span class="tag a-share">A股</span><span class="tag time">05-06</span></div>
+<div class="news-title">两市融资余额截至04月30日为26871.50亿元，较前一交易日变动-0.62%；全市场逾百股涨停</div>
+<div class="news-source">来源：光大证券微资讯 · Wind数据</div>
 </div>
 
 </div>
@@ -208,27 +209,27 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 <div class="side-card">
 <h3>🎯 今日关注重点</h3>
 <ul class="side-list">
-<li>A股节后首日开盘：假期港股先跌后震荡，关注开盘方向选择</li>
-<li>美联储本周议息会议，鲍威尔记者会措辞将影响全球资产定价</li>
-<li>WTI原油跌破$100关口，能源股和炼化板块短期承压</li>
-<li>五一消费数据强劲，关注旅游/餐饮/消费板块节后表现</li>
-<li>港股科技指数节后承压，关注南向资金动向</li>
+<li>创业板指+2.75%续创近11年新高！科创50暴涨+5.47%，科技主线强势回归</li>
+<li>存储芯片产业链全线爆发，海光信息20cm涨停创历史新高，板块龙头集体涨停</li>
+<li>全市场成交额3.23万亿创年内第六，较节前放量4859亿，量能明显放大</li>
+<li>算力租赁概念爆发，利通电子4天3板，大位科技/东阳光/美利云涨停</li>
+<li>贵金属板块午后走高，国际金价反弹至$4696/盎司，晓程科技/四川黄金领涨</li>
 </ul>
 </div>
 <div class="side-card">
-<h3>📋 后市展望</h3>
+<h3>📈 后市展望</h3>
 <ul class="side-list risk-green">
-<li>PPI连续转正+制造业PMI扩张，企业盈利修复趋势延续</li>
-<li>A股全年分红近2.4万亿创历史新高，高股息策略仍具吸引力</li>
-<li>五一消费数据超预期，内需修复信号明确，消费板块有望活跃</li>
-<li>恒科指数市净率处于历史低位，中长线配置价值突出</li>
+<li>创业板指/科创50技术面突破，AI产业链需求驱动增长扎实，关注持续性</li>
+<li>PPI连续转正+制造业PMI扩张，企业盈利修复加速，一季度净利润+7.6%</li>
+<li>A股全年分红2.55万亿创历史新高，高股息资产持续吸引长线配置资金</li>
+<li>央行保持流动性充裕，"削峰填谷"灵活调节，资金面平稳偏宽松</li>
 </ul>
 <h3 style="margin-top:14px">⚠️ 风险提示</h3>
 <ul class="side-list risk-list">
-<li>美联储本周表态若偏鹰，全球风险资产面临调整压力</li>
-<li>中东局势仍有反复可能，油价波动或加大市场震荡</li>
-<li>美股本周迎多重风险事件，外部市场波动或传导至A股/港股</li>
-<li>节后首个交易日资金观望情绪可能较重，成交量或偏低</li>
+<li>科技题材短期涨幅过大，波动率与交易拥挤度走高，注意高位风险</li>
+<li>油气股跟随国际油价调整，中东局势不确定性仍存，相关板块承压</li>
+<li>白酒/旅游酒店等消费板块逆势下跌，内需复苏节奏仍待观察</li>
+<li>全市场成交额放量至3.23万亿，短期资金博弈加剧，注意板块轮动节奏</li>
 </ul>
 </div>
 </div>
@@ -263,9 +264,9 @@ body{background:#0d1117;color:#e6edf3;font-family:-apple-system,"PingFang SC","M
 </div>
 
 <div class="footer">
-数据来源：<a href="https://finance.sina.com.cn" target="_blank">新浪财经</a> · <a href="https://www.eastmoney.com" target="_blank">东方财富</a> · <a href="https://www.jujindata.com" target="_blank">聚金数据</a> · <a href="https://www.stats.gov.cn" target="_blank">国家统计局</a> · <a href="https://www.nbd.com.cn" target="_blank">每日经济新闻</a> · <a href="https://www.cls.cn" target="_blank">财联社</a> · NeoData金融数据<br>
+数据来源：<a href="https://finance.sina.com.cn" target="_blank">新浪财经</a> · <a href="https://www.eastmoney.com" target="_blank">东方财富</a> · <a href="https://www.jujindata.com" target="_blank">聚金数据</a> · <a href="https://www.stats.gov.cn" target="_blank">国家统计局</a> · <a href="https://www.nbd.com.cn" target="_blank">每日经济新闻</a> · <a href="https://www.cls.cn" target="_blank">财联社</a> · NeoData金融搜索<br>
 本报告仅供参考，不构成投资建议。投资有风险，决策需谨慎。<br>
-生成时间：2026-05-06 07:22 | WorkBuddy 自动生成 · A股数据截至04-30 · 港股/商品数据截至05-05
+生成时间：2026-05-07 07:10 | WorkBuddy 自动生成 · A股/港股/大宗商品数据截至2026-05-06 · 宏观数据截至2026年3月
 </div>
 </div>
 
