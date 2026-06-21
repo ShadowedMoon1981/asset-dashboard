@@ -42,7 +42,7 @@
         },
         {
           "name": "帮你投",
-          "amount": 33967.41,
+          "amount": 80967.41,
           "category": "fund"
         },
         {
@@ -51,7 +51,7 @@
           "category": "fixed"
         }
       ],
-      "total": 315641.54999999993,
+      "total": 362641.54999999993,
       "updateTime": "2026-06-21"
     },
     {
@@ -99,13 +99,13 @@
           "category": "stock"
         },
         {
-          "name": "紫金矿业",
-          "amount": 53442,
+          "name": "中国平安",
+          "amount": 45560,
           "category": "stock"
         },
         {
-          "name": "中国海洋石油",
-          "amount": 38604.2,
+          "name": "港创新药",
+          "amount": 27838.2,
           "category": "stock"
         },
         {
@@ -114,8 +114,8 @@
           "category": "stock"
         },
         {
-          "name": "腾讯控股",
-          "amount": 37967,
+          "name": "平安银行",
+          "amount": 11020,
           "category": "stock"
         },
         {
@@ -124,8 +124,8 @@
           "category": "fund"
         }
       ],
-      "total": 514483.25000000006,
-      "updateTime": "2026-06-21"
+      "total": 468888.25,
+      "updateTime": "2026-03-28"
     },
     {
       "id": "bank",
