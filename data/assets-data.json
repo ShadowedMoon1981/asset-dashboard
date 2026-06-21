@@ -85,7 +85,7 @@
       "items": [
         {
           "name": "现金",
-          "amount": 101444.57,
+          "amount": 161444.57,
           "category": "cash"
         },
         {
@@ -99,8 +99,8 @@
           "category": "stock"
         },
         {
-          "name": "中国平安",
-          "amount": 45560,
+          "name": "紫金矿业",
+          "amount": 53442,
           "category": "stock"
         },
         {
@@ -124,8 +124,8 @@
           "category": "fund"
         }
       ],
-      "total": 468888.25,
-      "updateTime": "2026-03-28"
+      "total": 536770.25,
+      "updateTime": "2026-06-21"
     },
     {
       "id": "bank",
