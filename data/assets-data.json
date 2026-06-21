@@ -89,13 +89,8 @@
           "category": "cash"
         },
         {
-          "name": "货币基金",
-          "amount": 101478.85,
-          "category": "cash"
-        },
-        {
           "name": "中国移动",
-          "amount": 46710,
+          "amount": 45825,
           "category": "stock"
         },
         {
@@ -104,27 +99,32 @@
           "category": "stock"
         },
         {
-          "name": "港创新药",
-          "amount": 27838.2,
+          "name": "腾讯控股",
+          "amount": 37838.2,
           "category": "stock"
         },
         {
           "name": "招商银行",
-          "amount": 19720,
+          "amount": 18630,
           "category": "stock"
         },
         {
-          "name": "平安银行",
-          "amount": 11020,
+          "name": "阿里巴巴",
+          "amount": 27142,
           "category": "stock"
         },
         {
           "name": "华夏中证500指数增强A",
           "amount": 115116.63,
           "category": "fund"
+        },
+        {
+          "name": "中国海洋石油",
+          "amount": 38605,
+          "category": "stock"
         }
       ],
-      "total": 536770.25,
+      "total": 498043.4,
       "updateTime": "2026-06-21"
     },
     {
