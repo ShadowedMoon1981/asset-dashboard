@@ -7,32 +7,32 @@
       "items": [
         {
           "name": "余额宝",
-          "amount": 86295.2,
+          "amount": 77386.2,
           "category": "cash"
         },
         {
           "name": "南方红利低波50ETF联接A",
-          "amount": 30684.52,
+          "amount": 28684.52,
           "category": "fund"
         },
         {
           "name": "华夏港股通央企红利ETF联接A",
-          "amount": 20439.24,
+          "amount": 19439.24,
           "category": "fund"
         },
         {
           "name": "华泰柏瑞中证红利低波动ETF联接A",
-          "amount": 28658.4,
+          "amount": 26658.4,
           "category": "fund"
         },
         {
           "name": "天弘中证银行ETF联接A",
-          "amount": 32682.09,
+          "amount": 31682.09,
           "category": "fund"
         },
         {
           "name": "易方达恒生科技ETF联接(QDII)A",
-          "amount": 63338.68,
+          "amount": 60338.68,
           "category": "fund"
         },
         {
@@ -51,7 +51,7 @@
           "category": "fixed"
         }
       ],
-      "total": 362641.54999999993,
+      "total": 344732.55000000005,
       "updateTime": "2026-06-21"
     },
     {
@@ -61,12 +61,12 @@
       "items": [
         {
           "name": "东方红中证红利低波动指数A",
-          "amount": 22774.3,
+          "amount": 20774.3,
           "category": "fund"
         },
         {
           "name": "华夏恒生ETF联接A",
-          "amount": 20203.11,
+          "amount": 19203.11,
           "category": "fund"
         },
         {
@@ -75,7 +75,7 @@
           "category": "cash"
         }
       ],
-      "total": 92977.41,
+      "total": 89977.41,
       "updateTime": "2026-06-21"
     },
     {
