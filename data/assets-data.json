@@ -68,10 +68,15 @@
           "name": "华夏恒生ETF联接A",
           "amount": 20203.11,
           "category": "fund"
+        },
+        {
+          "name": "工银双利债券A",
+          "amount": 50000,
+          "category": "cash"
         }
       ],
-      "total": 42977.41,
-      "updateTime": "2026-03-28"
+      "total": 92977.41,
+      "updateTime": "2026-06-21"
     },
     {
       "id": "citics",
