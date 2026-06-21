@@ -37,7 +37,7 @@
         },
         {
           "name": "黄金",
-          "amount": 11576.01,
+          "amount": 19576.01,
           "category": "gold"
         },
         {
@@ -51,8 +51,8 @@
           "category": "fixed"
         }
       ],
-      "total": 307641.55,
-      "updateTime": "2026-03-28"
+      "total": 315641.54999999993,
+      "updateTime": "2026-06-21"
     },
     {
       "id": "jd",
@@ -99,13 +99,13 @@
           "category": "stock"
         },
         {
-          "name": "中国平安",
-          "amount": 45560,
+          "name": "紫金矿业",
+          "amount": 53442,
           "category": "stock"
         },
         {
-          "name": "港创新药",
-          "amount": 27838.2,
+          "name": "中国海洋石油",
+          "amount": 38604.2,
           "category": "stock"
         },
         {
@@ -114,8 +114,8 @@
           "category": "stock"
         },
         {
-          "name": "平安银行",
-          "amount": 11020,
+          "name": "腾讯控股",
+          "amount": 37967,
           "category": "stock"
         },
         {
@@ -124,8 +124,8 @@
           "category": "fund"
         }
       ],
-      "total": 468888.25,
-      "updateTime": "2026-03-28"
+      "total": 514483.25000000006,
+      "updateTime": "2026-06-21"
     },
     {
       "id": "bank",
