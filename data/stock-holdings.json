@@ -1,0 +1,50 @@
+{
+  "updatedAt": "2026-06-28 10:28:00",
+  "stocks": [
+    {
+      "id": "stock_001",
+      "name": "浦发银行",
+      "stockCode": "600000",
+      "stockMarket": "SH",
+      "marketCategory": "A",
+      "industry": "金融-银行",
+      "holdings": 1000,
+      "costPrice": 8.50,
+      "alertPrice": { "high": 12.00, "low": 7.00 },
+      "pe_ttm": 7.1,
+      "dividend_yield": 3.9,
+      "eps_ttm": 1.25,
+      "dividend_per_share": 0.35
+    },
+    {
+      "id": "stock_002",
+      "name": "中国平安",
+      "stockCode": "601318",
+      "stockMarket": "SH",
+      "marketCategory": "A",
+      "industry": "金融-保险",
+      "holdings": 200,
+      "costPrice": 45.20,
+      "alertPrice": { "high": 60.00, "low": 40.00 },
+      "pe_ttm": 12.5,
+      "dividend_yield": 5.2,
+      "eps_ttm": 6.85,
+      "dividend_per_share": 2.50
+    },
+    {
+      "id": "stock_003",
+      "name": "五粮液",
+      "stockCode": "000858",
+      "stockMarket": "SZ",
+      "marketCategory": "A",
+      "industry": "消费-白酒",
+      "holdings": 50,
+      "costPrice": 158.00,
+      "alertPrice": { "high": 180.00, "low": 140.00 },
+      "pe_ttm": 22.3,
+      "dividend_yield": 2.1,
+      "eps_ttm": 6.95,
+      "dividend_per_share": 3.25
+    }
+  ]
+}
